@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Jewellers | GST Tax Invoice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eef2f5;
+            font-family: 'Arial', 'Helvetica', 'Segoe UI', sans-serif;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .invoice-container {
+            max-width: 1300px;
+            width: 100%;
+            background: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .invoice {
+            padding: 20px 25px 25px 25px;
+            background: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vendor-header {
+            border: 1px solid #000;
+            padding: 12px 15px;
+            margin-bottom: 18px;
+            background: #fefefe;
+        }
+        
+        .company-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .company-icon {
+            width: 33px;
+            height: 33px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1e466e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .company-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .company-icon .no-image {
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+        }
+        .vendor-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e466e;
+        }
+        
+        .vendor-details {
+            font-size: 10px;
+            line-height: 1.4;
+            color: #2c3e50;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        .contact-row {
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e466e;
+        }
+        .row-flex {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .invoice-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .meta-box {
+            border: 1px solid #000;
+            padding: 10px 12px;
+            background: white;
+        }
+        .meta-title {
+            font-weight: 800;
+            font-size: 12px;
+            background: #f0f2f5;
+            padding: 4px 8px;
+            margin: -10px -12px 10px -12px;
+            border-bottom: 1px solid #000;
+        }
+        .meta-row {
+            display: flex;
+            margin-bottom: 6px;
+            font-size: 11px;
+            align-items: center;
+        }
+        .meta-label {
+            width: 100px;
+            font-weight: 700;
+            font-size: 10px;
+        }
+        .meta-value {
+            flex: 1;
+        }
+        .meta-value input, .meta-value select, .meta-value textarea {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #aaa;
+            font-size: 10px;
+            font-weight: normal;
+        }
+        
+        .payment-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .payment-group label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .payment-group input {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        /* Print-only selected payment display */
+        .print-payment-display {
+            display: none;
+        }
+
+        .items-wrapper {
+            border: 1px solid #000;
+            margin: 15px 0;
+            overflow-x: auto;
+            background: white;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+        .items-table th, .items-table td {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .items-table th {
+            background: #e9ecef;
+            font-weight: 800;
+            font-size: 8px;
+            padding: 6px 3px;
+        }
+        .items-table input, .items-table select {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #ccc;
+            font-size: 9px;
+            text-align: center;
+            font-weight: normal;
+        }
+        .making-select {
+            width: 75px !important;
+            padding: 3px;
+            font-size: 8px;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .add-item-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            margin-right: auto;
+            font-weight: bold;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 18px;
+            margin: 15px 0;
+        }
+        .tax-card, .amount-card {
+            border: 1px solid #000;
+            padding: 10px 12px;
+            background: white;
+        }
+        .tax-card h5, .amount-card h5 {
+            background: #e9ecef;
+            margin: -10px -12px 10px -12px;
+            padding: 6px 10px;
+            border-bottom: 1px solid #000;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .tax-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .tax-type-select {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 6px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .tax-type-select label {
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .tax-type-select select {
+            padding: 4px 8px;
+            border: 1px solid #aaa;
+            font-size: 10px;
+            width: 200px;
+        }
+        /* Print-only selected GST display */
+        .print-gst-display {
+            display: none;
+        }
+        .grand-total-row {
+            border-top: 2px solid #000;
+            margin-top: 8px;
+            padding-top: 6px;
+            font-weight: 800;
+            font-size: 13px;
+        }
+        .words-box {
+            background: #f8f9fa;
+            padding: 8px;
+            margin-top: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            border-left: 3px solid #1e466e;
+        }
+
+        .signature-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin: 20px 0 15px;
+            border-top: 1px solid #000;
+            padding-top: 15px;
+            background: white;
+        }
+        .sign-box {
+            border: 1px solid #000;
+            padding: 12px;
+            min-height: 70px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 18px;
+            padding-top: 12px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+        button {
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .btn-save { background: #28a745; }
+        .btn-save:hover { background: #218838; }
+        .btn-print { background: #1e466e; }
+        .btn-print:hover { background: #163a5a; }
+
+        /* Print Styles */
+        @media print {
+            @page { 
+                size: A4; 
+                margin: 8mm;
+            }
+            body { 
+                background: white; 
+                padding: 0; 
+                margin: 0;
+            }
+            .action-bar, .add-item-btn, .delete-btn, .tax-type-select, .payment-group, .gst-section input, .gst-section select { 
+                display: none !important; 
+            }
+            .invoice { 
+                padding: 0; 
+                margin: 0;
+            }
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-size: 9px !important;
+                color: black !important;
+                font-weight: 600 !important;
+            }
+            select {
+                -webkit-appearance: none;
+                appearance: none;
+                border: none;
+            }
+            .items-table th, .items-table td { 
+                border: 1px solid black !important; 
+            }
+            .vendor-header, .meta-box, .tax-card, .amount-card, .sign-box { 
+                border: 1px solid black !important; 
+            }
+            /* Show selected payment in print */
+            .print-payment-display {
+                display: block;
+                font-weight: 700;
+                padding: 5px 0;
+            }
+            .screen-payment {
+                display: none;
+            }
+            /* Show selected GST in print */
+            .print-gst-display {
+                display: block;
+                font-weight: 700;
+                padding: 5px 0;
+            }
+            .screen-gst {
+                display: none;
+            }
+            /* Make all text bold in print */
+            .vendor-details, .contact-row, .row-flex, .meta-label, .meta-value, .tax-row, .words-box, .sign-box {
+                font-weight: 700 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="invoice-container">
+    <div class="invoice">
+        <div class="vendor-header">
+            <div class="company-header">
+                <div class="company-icon">
+                    <img src="icon.png" alt="JP Jewellers Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'no-image\'>JP</div>'">
+                </div>
+                <div class="vendor-name">J.P JEWELLERS - Gold & Silver Merchants</div>
+            </div>
+            <div class="vendor-details">
+                <strong>Sold By:</strong> JP JEWELLERS PVT LTD<br>
+                <strong>Address:</strong> Lalganj, Bairia, Ballia - 277216<br>
+                <strong>GSTIN:</strong> 09ATUPP1565AIZF | <strong>PAN:</strong> XXXXXXXXXX | <strong>CIN:</strong> XXXXXXXXXXXXXXXXX
+            </div>
+            <div class="contact-row">
+                <strong>Contact:</strong> 9919463098 , 9956624200
+            </div>
+            <div class="row-flex">
+                <span><strong>Order ID:</strong> <span id="orderIdGen"></span></span>
+                <span><strong>Order Date:</strong> <span id="orderDateDisplay"></span></span>
+                <span><strong>Invoice Date:</strong> <span id="invoiceDateDisplay"></span></span>
+            </div>
+        </div>
+
+        <div class="invoice-meta">
+            <div class="meta-box">
+                <div class="meta-title">Billing Address</div>
+                <div class="meta-row"><div class="meta-label">Customer Name *</div><div class="meta-value"><input type="text" id="custName" placeholder="Full Name"></div></div>
+                <div class="meta-row"><div class="meta-label">Address</div><div class="meta-value"><textarea id="custAddress" rows="2" placeholder="Street, City, District"></textarea></div></div>
+                <div class="meta-row"><div class="meta-label">Phone Number</div><div class="meta-value"><input type="tel" id="custPhone" maxlength="10" placeholder="10 digit mobile"></div></div>
+                <div class="meta-row"><div class="meta-label">PAN Number</div><div class="meta-value"><input type="text" id="custPan" placeholder="ABCDE1234F"></div></div>
+                <div class="meta-row"><div class="meta-label">Aadhar Number</div><div class="meta-value"><input type="text" id="custAadhar" placeholder="XXXX-XXXX-XXXX"></div></div>
+                <div class="meta-row"><div class="meta-label">GSTIN</div><div class="meta-value"><input type="text" id="custGstin" placeholder="Customer GSTIN"></div></div>
+            </div>
+            <div class="meta-box">
+                <div class="meta-title">Invoice & Shipping Details</div>
+                <div class="meta-row"><div class="meta-label">Invoice Number</div><div class="meta-value"><input type="text" id="invoiceNo" readonly class="disabled-bg"></div></div>
+                <div class="meta-row"><div class="meta-label">Invoice Date</div><div class="meta-value"><input type="text" id="invoiceDate" readonly class="disabled-bg"></div></div>
+                <div class="meta-row"><div class="meta-label">Payment Mode</div><div class="meta-value">
+                    <div class="payment-group screen-payment" id="paymentGroup">
+                        <label><input type="checkbox" value="Cash"> Cash</label>
+                        <label><input type="checkbox" value="UPI"> UPI</label>
+                        <label><input type="checkbox" value="Card"> Card</label>
+                        <label><input type="checkbox" value="Bank Transfer"> Bank Transfer</label>
+                        <label><input type="checkbox" value="Net Banking"> Net Banking</label>
+                        <label><input type="checkbox" value="Cheque"> Cheque</label>
+                        <label><input type="checkbox" value="Wallet"> Wallet</label>
+                    </div>
+                    <div class="print-payment-display" id="printPaymentDisplay"></div>
+                </div></div>
+                <div class="meta-row"><div class="meta-label">Place of Supply</div><div class="meta-value"><input type="text" id="placeOfSupply" placeholder="Enter State"></div></div>
+                <div class="meta-row"><div class="meta-label">Discount (₹)</div><div class="meta-value"><input type="number" id="discountAmount" value="0" step="1"></div></div>
+            </div>
+        </div>
+
+        <div class="items-wrapper">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>SL</th><th>Item Description</th><th>HSN</th><th>Purity</th><th>Metal(g)</th>
+                        <th>Stone(g)</th><th>Net(g)</th><th>Rate/g</th><th>Making Type</th><th>Making %/₹</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceRows"></tbody>
+            </table>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <button class="add-item-btn" id="addItemBtn">+ Add Item</button>
+        </div>
+
+        <div class="totals-grid">
+            <div class="tax-card">
+                <h5>Tax Summary (GST)</h5>
+                <div class="tax-type-select screen-gst">
+                    <label>Select Tax Type:</label>
+                    <select id="taxTypeSelect">
+                        <option value="igst">IGST (Inter-State) - Single Tax</option>
+                        <option value="cgst_sgst">CGST + SGST (Intra-State) - Split Tax</option>
+                    </select>
+                </div>
+                <div class="print-gst-display" id="printGstDisplay"></div>
+                
+                <div id="igstSection">
+                    <div class="tax-row"><span>IGST Rate :</span><span><input type="number" id="igstRate" value="3" step="0.1" style="width:60px;"> %</span></div>
+                    <div class="tax-row"><span>IGST Amount :</span><span id="igstAmount">₹0.00</span></div>
+                </div>
+                
+                <div id="cgstSgstSection" style="display:none;">
+                    <div class="tax-row"><span>CGST Rate :</span><span><input type="number" id="cgstRate" value="1.5" step="0.1" style="width:60px;"> %</span></div>
+                    <div class="tax-row"><span>CGST Amount :</span><span id="cgstAmount">₹0.00</span></div>
+                    <div class="tax-row"><span>SGST Rate :</span><span><input type="number" id="sgstRate" value="1.5" step="0.1" style="width:60px;"> %</span></div>
+                    <div class="tax-row"><span>SGST Amount :</span><span id="sgstAmount">₹0.00</span></div>
+                </div>
+                
+                <div class="tax-row"><span>Total GST Amount :</span><span id="totalGstAmount">₹0.00</span></div>
+                <div class="tax-row"><span>Total Making Charges :</span><span id="totalMakingValue">₹0.00</span></div>
+                <div class="tax-row"><span>Total Stone Value :</span><span id="totalStoneValue">₹0.00</span></div>
+                <div class="tax-row"><span>Total Metal Value :</span><span id="totalGoldValue">₹0.00</span></div>
+                <div class="tax-row"><span>Total Taxable Value :</span><span id="totalTaxableValue">₹0.00</span></div>
+                <div class="tax-row"><span>Discount :</span><span id="discountShow">₹0.00</span></div>
+                <div class="tax-row grand-total-row"><span>GRAND TOTAL :</span><span id="grandTotalValue">₹0.00</span></div>
+            </div>
+            <div class="amount-card">
+                <h5>Amount in Words</h5>
+                <div class="words-box" id="amountWords">Zero Rupees Only</div>
+                <div style="margin-top: 10px; font-size: 8px; text-align: center; font-weight: 600;">
+                    ** Conditions Apply. E. & O.E. **<br>
+                    Goods once sold will not be taken back.
+                </div>
+            </div>
+        </div>
+
+        <div class="signature-footer">
+            <div class="sign-box">
+                <strong>Customer KYC Details</strong><br>
+                <span id="displayPan">PAN: _____________</span><br>
+                <span id="displayAadhar">Aadhar: _____________</span><br><br>
+                Customer Signature
+            </div>
+            <div class="sign-box">For J.P JEWELLERS<br><br>_________________________<br>Authorised Signatory<br>(Company Seal)</div>
+        </div>
+        <div style="font-size: 7px; text-align: center; border-top: 1px solid #ccc; padding-top: 5px; font-weight: 600;">
+            This is a computer generated GST invoice | GSTIN: 09ATUPP1565AIZF
+        </div>
+
+        <div class="action-bar">
+            <button id="saveInvoiceBtn" class="btn-save">💾 Save Invoice</button>
+            <button id="printBtn" class="btn-print">🖨️ Print / PDF (A4)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let itemsData = [];
+    let currentTaxType = 'igst';
+
+    const tbody = document.getElementById('invoiceRows');
+    const addBtn = document.getElementById('addItemBtn');
+    const saveBtn = document.getElementById('saveInvoiceBtn');
+    const printBtn = document.getElementById('printBtn');
+    const discountInput = document.getElementById('discountAmount');
+    const igstRateInput = document.getElementById('igstRate');
+    const cgstRateInput = document.getElementById('cgstRate');
+    const sgstRateInput = document.getElementById('sgstRate');
+    const totalTaxableSpan = document.getElementById('totalTaxableValue');
+    const totalMakingSpan = document.getElementById('totalMakingValue');
+    const totalStoneSpan = document.getElementById('totalStoneValue');
+    const totalGoldSpan = document.getElementById('totalGoldValue');
+    const igstAmountSpan = document.getElementById('igstAmount');
+    const cgstAmountSpan = document.getElementById('cgstAmount');
+    const sgstAmountSpan = document.getElementById('sgstAmount');
+    const totalGstAmountSpan = document.getElementById('totalGstAmount');
+    const discountShowSpan = document.getElementById('discountShow');
+    const grandTotalSpan = document.getElementById('grandTotalValue');
+    const amountWordsSpan = document.getElementById('amountWords');
+    const custPanInput = document.getElementById('custPan');
+    const custAadharInput = document.getElementById('custAadhar');
+    const displayPanSpan = document.getElementById('displayPan');
+    const displayAadharSpan = document.getElementById('displayAadhar');
+    const igstSection = document.getElementById('igstSection');
+    const cgstSgstSection = document.getElementById('cgstSgstSection');
+    const taxTypeSelect = document.getElementById('taxTypeSelect');
+    const printPaymentDisplay = document.getElementById('printPaymentDisplay');
+    const printGstDisplay = document.getElementById('printGstDisplay');
+
+    function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
+
+    function updateKycDisplay() {
+        let pan = custPanInput.value.trim();
+        let aadhar = custAadharInput.value.trim();
+        displayPanSpan.innerHTML = pan ? `PAN: ${pan}` : 'PAN: _____________';
+        displayAadharSpan.innerHTML = aadhar ? `Aadhar: ${aadhar}` : 'Aadhar: _____________';
+    }
+
+    function updatePrintDisplay() {
+        // Update payment display for print
+        let selected = [];
+        document.querySelectorAll('#paymentGroup input:checked').forEach(cb => {
+            selected.push(cb.value);
+        });
+        printPaymentDisplay.innerHTML = selected.join(', ') || 'Not Selected';
+        
+        // Update GST display for print
+        let gstText = currentTaxType === 'igst' ? 'IGST (Inter-State) - Single Tax' : 'CGST + SGST (Intra-State) - Split Tax';
+        printGstDisplay.innerHTML = `<strong>Tax Type:</strong> ${gstText}`;
+    }
+
+    function setInvoiceMeta() {
+        let now = new Date();
+        let y = now.getFullYear();
+        let m = String(now.getMonth()+1).padStart(2,'0');
+        let d = String(now.getDate()).padStart(2,'0');
+        let timestamp = now.getTime().toString().slice(-6);
+        document.getElementById('invoiceNo').value = `GST-INV-${y}${m}${d}-${timestamp}`;
+        let formattedDate = `${d}/${m}/${y}`;
+        document.getElementById('invoiceDate').value = formattedDate;
+        document.getElementById('invoiceDateDisplay').innerText = formattedDate;
+        document.getElementById('orderDateDisplay').innerText = formattedDate;
+        document.getElementById('orderIdGen').innerText = `JP-ORD-${y}${m}${d}${Math.floor(Math.random()*1000)}`;
+    }
+
+    function getPaymentModes() {
+        let selected = [];
+        document.querySelectorAll('#paymentGroup input:checked').forEach(cb => {
+            selected.push(cb.value);
+        });
+        return selected.join(', ') || 'Not Selected';
+    }
+
+    function switchTaxType() {
+        currentTaxType = taxTypeSelect.value;
+        
+        if(currentTaxType === 'igst') {
+            igstSection.style.display = 'block';
+            cgstSgstSection.style.display = 'none';
+        } else {
+            igstSection.style.display = 'none';
+            cgstSgstSection.style.display = 'block';
+        }
+        updatePrintDisplay();
+        recalcAll();
+    }
+
+    function calculateRow(row) {
+        let goldWt = toNumber(row.goldWt);
+        let stoneWt = toNumber(row.stoneWt);
+        let rate = toNumber(row.ratePerGram);
+        
+        row.netWt = goldWt + stoneWt;
+        
+        let goldValue = goldWt * rate;
+        
+        let makingValue = 0;
+        if (row.makingType === 'percentage') {
+            let makingPercent = toNumber(row.makingPercent);
+            makingValue = goldValue * (makingPercent / 100);
+        } else {
+            makingValue = toNumber(row.makingFixed);
+        }
+        row.makingValue = makingValue;
+        
+        let stoneValue = stoneWt * rate;
+        row.stoneValue = stoneValue;
+        
+        let total = goldValue + makingValue + stoneValue;
+        row.rowTotal = total;
+        
+        return { goldValue, makingValue, stoneValue, total };
+    }
+
+    function recalcAll() {
+        let totalGold = 0, totalMaking = 0, totalStone = 0, totalTaxable = 0;
+        
+        for(let i=0; i<itemsData.length; i++) {
+            let result = calculateRow(itemsData[i]);
+            totalGold += result.goldValue;
+            totalMaking += result.makingValue;
+            totalStone += result.stoneValue;
+            totalTaxable += result.total;
+        }
+        
+        let discount = toNumber(discountInput.value);
+        let afterDiscount = totalTaxable - discount;
+        if(afterDiscount < 0) afterDiscount = 0;
+        
+        let totalGst = 0;
+        if(currentTaxType === 'igst') {
+            let igstRate = toNumber(igstRateInput.value);
+            let igstAmount = afterDiscount * (igstRate / 100);
+            totalGst = igstAmount;
+            igstAmountSpan.innerHTML = `₹${igstAmount.toFixed(2)}`;
+            cgstAmountSpan.innerHTML = `₹0.00`;
+            sgstAmountSpan.innerHTML = `₹0.00`;
+        } else {
+            let cgstRate = toNumber(cgstRateInput.value);
+            let sgstRate = toNumber(sgstRateInput.value);
+            let cgstAmount = afterDiscount * (cgstRate / 100);
+            let sgstAmount = afterDiscount * (sgstRate / 100);
+            totalGst = cgstAmount + sgstAmount;
+            cgstAmountSpan.innerHTML = `₹${cgstAmount.toFixed(2)}`;
+            sgstAmountSpan.innerHTML = `₹${sgstAmount.toFixed(2)}`;
+            igstAmountSpan.innerHTML = `₹0.00`;
+        }
+        
+        totalGstAmountSpan.innerHTML = `₹${totalGst.toFixed(2)}`;
+        totalMakingSpan.innerHTML = `₹${totalMaking.toFixed(2)}`;
+        totalStoneSpan.innerHTML = `₹${totalStone.toFixed(2)}`;
+        totalGoldSpan.innerHTML = `₹${totalGold.toFixed(2)}`;
+        
+        let grandTotal = afterDiscount + totalGst;
+        if(grandTotal < 0) grandTotal = 0;
+        
+        totalTaxableSpan.innerText = `₹${totalTaxable.toFixed(2)}`;
+        discountShowSpan.innerText = `₹${discount.toFixed(2)}`;
+        grandTotalSpan.innerText = `₹${grandTotal.toFixed(2)}`;
+        amountWordsSpan.innerText = convertToIndianWords(Math.abs(grandTotal));
+        
+        renderTableRows();
+        updatePrintDisplay();
+    }
+
+    function convertToIndianWords(num) {
+        if(num === 0) return "Zero Rupees Only";
+        let rupees = Math.floor(num);
+        let paise = Math.round((num - rupees) * 100);
+        let words = convertNumberToIndian(rupees) + " Rupees";
+        if(paise > 0) words += " and " + convertNumberToIndian(paise) + " Paise";
+        return words + " Only";
+    }
+    
+    function convertNumberToIndian(n) {
+        if(n === 0) return "";
+        const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+        const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+        function underHundred(num) {
+            if(num < 20) return units[num];
+            return tens[Math.floor(num/10)] + (num%10 ? " " + units[num%10] : "");
+        }
+        function convert(num) {
+            if(num === 0) return "";
+            let crore = Math.floor(num/10000000);
+            let lakhRem = num % 10000000;
+            let lakh = Math.floor(lakhRem/100000);
+            let thousandRem = lakhRem % 100000;
+            let thousand = Math.floor(thousandRem/1000);
+            let hundredRem = thousandRem % 1000;
+            let hundred = Math.floor(hundredRem/100);
+            let rest = hundredRem % 100;
+            let result = "";
+            if(crore) result += convert(crore) + " Crore ";
+            if(lakh) result += convert(lakh) + " Lakh ";
+            if(thousand) result += convert(thousand) + " Thousand ";
+            if(hundred) result += units[hundred] + " Hundred ";
+            if(rest) result += underHundred(rest);
+            return result.trim();
+        }
+        return convert(n);
+    }
+
+    function renderTableRows() {
+        tbody.innerHTML = '';
+        if(itemsData.length === 0) {
+            let tr = document.createElement('tr');
+            let td = document.createElement('td');
+            td.colSpan = 11;
+            td.style.textAlign = 'center';
+            td.style.padding = '20px';
+            td.style.color = '#adb5bd';
+            td.innerHTML = '— Click "Add Item" to add products —';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+        
+        for(let idx=0; idx<itemsData.length; idx++) {
+            let row = itemsData[idx];
+            let tr = document.createElement('tr');
+            
+            let tdSl = document.createElement('td');
+            tdSl.innerText = idx+1;
+            tr.appendChild(tdSl);
+            
+            let tdDesc = document.createElement('td');
+            let descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.value = row.itemDesc || '';
+            descInput.placeholder = 'Item name';
+            descInput.style.width = '100px';
+            descInput.onchange = (function(r) { return function(e) { r.itemDesc = e.target.value; recalcAll(); }; })(row);
+            tdDesc.appendChild(descInput);
+            tr.appendChild(tdDesc);
+            
+            let tdHsn = document.createElement('td');
+            let hsnInput = document.createElement('input');
+            hsnInput.type = 'text';
+            hsnInput.value = row.hsn || '7113';
+            hsnInput.style.width = '50px';
+            hsnInput.maxLength = 4;
+            hsnInput.onchange = (function(r) { return function(e) { r.hsn = e.target.value; }; })(row);
+            tdHsn.appendChild(hsnInput);
+            tr.appendChild(tdHsn);
+            
+            let tdPurity = document.createElement('td');
+            let puritySelect = document.createElement('select');
+            let purityOptions = ['24K', '22K', '20K', '18K', '14K', 'Silver999', 'Silver Ornaments'];
+            purityOptions.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p;
+                opt.innerText = p;
+                if(row.purity === p) opt.selected = true;
+                puritySelect.appendChild(opt);
+            });
+            puritySelect.onchange = (function(r) { return function(e) { r.purity = e.target.value; recalcAll(); }; })(row);
+            tdPurity.appendChild(puritySelect);
+            tr.appendChild(tdPurity);
+            
+            let tdGold = document.createElement('td');
+            let goldInput = document.createElement('input');
+            goldInput.type = 'number';
+            goldInput.value = row.goldWt || 0;
+            goldInput.step = '0.01';
+            goldInput.style.width = '50px';
+            goldInput.onchange = (function(r) { return function(e) { r.goldWt = toNumber(e.target.value); recalcAll(); }; })(row);
+            tdGold.appendChild(goldInput);
+            tr.appendChild(tdGold);
+            
+            let tdStone = document.createElement('td');
+            let stoneInput = document.createElement('input');
+            stoneInput.type = 'number';
+            stoneInput.value = row.stoneWt || 0;
+            stoneInput.step = '0.01';
+            stoneInput.style.width = '50px';
+            stoneInput.onchange = (function(r) { return function(e) { r.stoneWt = toNumber(e.target.value); recalcAll(); }; })(row);
+            tdStone.appendChild(stoneInput);
+            tr.appendChild(tdStone);
+            
+            let tdNet = document.createElement('td');
+            tdNet.innerText = (row.netWt || 0).toFixed(3);
+            tr.appendChild(tdNet);
+            
+            let tdRate = document.createElement('td');
+            let rateInput = document.createElement('input');
+            rateInput.type = 'number';
+            rateInput.value = row.ratePerGram || 5200;
+            rateInput.step = '10';
+            rateInput.style.width = '55px';
+            rateInput.onchange = (function(r) { return function(e) { r.ratePerGram = toNumber(e.target.value); recalcAll(); }; })(row);
+            tdRate.appendChild(rateInput);
+            tr.appendChild(tdRate);
+            
+            let tdMakingType = document.createElement('td');
+            let makingSelect = document.createElement('select');
+            makingSelect.className = 'making-select';
+            
+            let goldOption = document.createElement('option');
+            goldOption.value = 'percentage';
+            goldOption.innerText = 'Gold %';
+            let silverOption = document.createElement('option');
+            silverOption.value = 'fixed';
+            silverOption.innerText = 'Silver ₹';
+            
+            makingSelect.appendChild(goldOption);
+            makingSelect.appendChild(silverOption);
+            makingSelect.value = row.makingType || 'percentage';
+            makingSelect.onchange = (function(r) { return function(e) { 
+                r.makingType = e.target.value; 
+                recalcAll(); 
+            }; })(row);
+            tdMakingType.appendChild(makingSelect);
+            tr.appendChild(tdMakingType);
+            
+            let tdMakingInput = document.createElement('td');
+            let makingInput = document.createElement('input');
+            makingInput.type = 'number';
+            makingInput.step = '0.1';
+            makingInput.style.width = '50px';
+            if (row.makingType === 'percentage') {
+                makingInput.value = row.makingPercent || 10;
+                makingInput.placeholder = '%';
+            } else {
+                makingInput.value = row.makingFixed || 0;
+                makingInput.placeholder = '₹';
+            }
+            makingInput.onchange = (function(r) { return function(e) {
+                if (r.makingType === 'percentage') {
+                    r.makingPercent = toNumber(e.target.value);
+                } else {
+                    r.makingFixed = toNumber(e.target.value);
+                }
+                recalcAll();
+            }; })(row);
+            tdMakingInput.appendChild(makingInput);
+            tr.appendChild(tdMakingInput);
+            
+            let tdAction = document.createElement('td');
+            let delBtn = document.createElement('button');
+            delBtn.innerHTML = '❌';
+            delBtn.className = 'delete-btn';
+            delBtn.style.background = '#dc3545';
+            delBtn.style.color = 'white';
+            delBtn.style.border = 'none';
+            delBtn.style.padding = '5px 10px';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
+            delBtn.style.fontSize = '12px';
+            delBtn.style.fontWeight = 'bold';
+            delBtn.title = 'Delete Item';
+            delBtn.onclick = (function(i) { return function() { 
+                itemsData.splice(i, 1); 
+                recalcAll(); 
+            }; })(idx);
+            tdAction.appendChild(delBtn);
+            tr.appendChild(tdAction);
+            
+            tbody.appendChild(tr);
+        }
+        
+        for(let i=0; i<itemsData.length && tbody.children[i]; i++) {
+            let cells = tbody.children[i].cells;
+            if(cells.length >= 11) {
+                cells[6].innerText = (itemsData[i].netWt || 0).toFixed(3);
+                
+                let makingInput = cells[9].querySelector('input');
+                if (makingInput) {
+                    if (itemsData[i].makingType === 'percentage') {
+                        makingInput.placeholder = '%';
+                        makingInput.value = itemsData[i].makingPercent || 10;
+                    } else {
+                        makingInput.placeholder = '₹';
+                        makingInput.value = itemsData[i].makingFixed || 0;
+                    }
+                }
+            }
+        }
+    }
+
+    function addNewItem() {
+        itemsData.push({
+            itemDesc: '', hsn: '7113', purity: '22K',
+            goldWt: 0, stoneWt: 0, netWt: 0,
+            ratePerGram: 5200, makingType: 'percentage', makingPercent: 10, makingFixed: 0,
+            makingValue: 0, stoneValue: 0, rowTotal: 0
+        });
+        recalcAll();
+    }
+    
+    function saveInvoiceToLocalStorage() {
+        let custName = document.getElementById('custName').value.trim();
+        if(custName === '') { alert('Please enter Customer Name'); return false; }
+        
+        let grandTotalText = grandTotalSpan.innerText;
+        let grandTotal = parseFloat(grandTotalText.replace('₹', '').replace(/,/g, '')) || 0;
+        
+        const invoiceObj = {
+            invoiceNo: document.getElementById('invoiceNo').value,
+            customerName: custName,
+            date: document.getElementById('invoiceDate').value,
+            amount: grandTotal,
+            paymentMode: getPaymentModes(),
+            taxType: currentTaxType,
+            items: itemsData.map(item => ({...item})),
+            customerInfo: {
+                name: custName,
+                address: document.getElementById('custAddress').value,
+                phone: document.getElementById('custPhone').value,
+                pan: document.getElementById('custPan').value,
+                aadhar: document.getElementById('custAadhar').value,
+                gstin: document.getElementById('custGstin').value
+            },
+            savedAt: new Date().toISOString()
+        };
+        
+        let existing = JSON.parse(localStorage.getItem('jp_jewellers_invoices_list') || '[]');
+        existing.unshift(invoiceObj);
+        localStorage.setItem('jp_jewellers_invoices_list', JSON.stringify(existing));
+        
+        let msg = document.createElement('div');
+        msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#28a745;color:white;padding:10px 18px;border-radius:5px;z-index:1000;font-size:12px;';
+        msg.innerHTML = '✓ Invoice saved successfully!';
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 2000);
+        return true;
+    }
+    
+    function validateAndPrint() {
+        let name = document.getElementById('custName').value.trim();
+        if(name === '') { 
+            alert('Please enter Customer Name before printing'); 
+            return false; 
+        }
+        if(itemsData.length === 0) { 
+            alert('Please add at least one item before printing'); 
+            return false; 
+        }
+        updatePrintDisplay();
+        updateKycDisplay();
+        window.print();
+        return true;
+    }
+    
+    addBtn.onclick = addNewItem;
+    saveBtn.onclick = saveInvoiceToLocalStorage;
+    printBtn.onclick = validateAndPrint;
+    discountInput.onchange = recalcAll;
+    igstRateInput.onchange = recalcAll;
+    cgstRateInput.onchange = recalcAll;
+    sgstRateInput.onchange = recalcAll;
+    custPanInput.onchange = updateKycDisplay;
+    custAadharInput.onchange = updateKycDisplay;
+    
+    taxTypeSelect.onchange = switchTaxType;
+    
+    // Update print display when payment checkboxes change
+    document.querySelectorAll('#paymentGroup input').forEach(cb => {
+        cb.onchange = updatePrintDisplay;
+    });
+    
+    custAadharInput.addEventListener('input', function(e) {
+        let v = e.target.value.replace(/\D/g, '');
+        if(v.length > 12) v = v.slice(0,12);
+        if(v.length >= 4 && v.length < 8) v = v.slice(0,4)+'-'+v.slice(4);
+        else if(v.length >= 8) v = v.slice(0,4)+'-'+v.slice(4,8)+'-'+v.slice(8,12);
+        e.target.value = v;
+        updateKycDisplay();
+    });
+    
+    custPanInput.addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,10);
+        updateKycDisplay();
+    });
+    
+    setInvoiceMeta();
+    itemsData = [];
+    recalcAll();
+    updateKycDisplay();
+    updatePrintDisplay();
+</script>
+</body>
+</html>
