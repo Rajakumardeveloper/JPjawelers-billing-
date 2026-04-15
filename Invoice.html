@@ -516,9 +516,17 @@
 
     function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
 
+    // Gold purities - use percentage for making charges
+    const goldPurities = ['24K', '22K', '18K', '14K', '9K'];
+    // Silver purities - use fixed amount for making charges
+    const silverPurities = ['Silver999', 'Silver Ornaments'];
+
     function isGoldPurity(purity) {
-        const goldPure = ['24K', '22K', '20K', '18K', '14K', '9K'];
-        return goldPure.includes(purity);
+        return goldPurities.includes(purity);
+    }
+
+    function isSilverPurity(purity) {
+        return silverPurities.includes(purity);
     }
 
     function updateKycDisplay() {
@@ -584,10 +592,16 @@
         
         let makingValue = 0;
         if (isGoldPurity(row.purity)) {
+            // Gold: Percentage of Gross Value
             let makingPercent = toNumber(row.makingPercent);
             makingValue = grossValue * (makingPercent / 100);
-        } else {
+        } else if (isSilverPurity(row.purity)) {
+            // Silver: Fixed amount
             makingValue = toNumber(row.makingFixed);
+        } else {
+            // Default to percentage for any other (should not happen)
+            let makingPercent = toNumber(row.makingPercent);
+            makingValue = grossValue * (makingPercent / 100);
         }
         row.makingValue = makingValue;
         
@@ -734,7 +748,7 @@
             
             let tdPurity = document.createElement('td');
             let puritySelect = document.createElement('select');
-            let purityOptions = ['24K', '22K', '20K', '18K', '14K', '9K', 'Silver999', 'Silver Ornaments'];
+            let purityOptions = [...goldPurities, ...silverPurities];
             purityOptions.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p;
