@@ -156,7 +156,6 @@
             margin: 0;
             cursor: pointer;
         }
-        /* Print-only selected payment display */
         .print-payment-display {
             display: none;
         }
@@ -191,11 +190,6 @@
             font-size: 9px;
             text-align: center;
             font-weight: normal;
-        }
-        .making-select {
-            width: 75px !important;
-            padding: 3px;
-            font-size: 8px;
         }
         .delete-btn {
             background: #dc3545;
@@ -268,7 +262,6 @@
             font-size: 10px;
             width: 200px;
         }
-        /* Print-only selected GST display */
         .print-gst-display {
             display: none;
         }
@@ -330,24 +323,11 @@
         .btn-print { background: #1e466e; }
         .btn-print:hover { background: #163a5a; }
 
-        /* Print Styles */
         @media print {
-            @page { 
-                size: A4; 
-                margin: 8mm;
-            }
-            body { 
-                background: white; 
-                padding: 0; 
-                margin: 0;
-            }
-            .action-bar, .add-item-btn, .delete-btn, .tax-type-select, .payment-group, .gst-section input, .gst-section select { 
-                display: none !important; 
-            }
-            .invoice { 
-                padding: 0; 
-                margin: 0;
-            }
+            @page { size: A4; margin: 8mm; }
+            body { background: white; padding: 0; margin: 0; }
+            .action-bar, .add-item-btn, .delete-btn, .tax-type-select, .payment-group, .gst-section input, .gst-section select { display: none !important; }
+            .invoice { padding: 0; margin: 0; }
             input, select, textarea {
                 border: none !important;
                 background: transparent !important;
@@ -356,39 +336,14 @@
                 color: black !important;
                 font-weight: 600 !important;
             }
-            select {
-                -webkit-appearance: none;
-                appearance: none;
-                border: none;
-            }
-            .items-table th, .items-table td { 
-                border: 1px solid black !important; 
-            }
-            .vendor-header, .meta-box, .tax-card, .amount-card, .sign-box { 
-                border: 1px solid black !important; 
-            }
-            /* Show selected payment in print */
-            .print-payment-display {
-                display: block;
-                font-weight: 700;
-                padding: 5px 0;
-            }
-            .screen-payment {
-                display: none;
-            }
-            /* Show selected GST in print */
-            .print-gst-display {
-                display: block;
-                font-weight: 700;
-                padding: 5px 0;
-            }
-            .screen-gst {
-                display: none;
-            }
-            /* Make all text bold in print */
-            .vendor-details, .contact-row, .row-flex, .meta-label, .meta-value, .tax-row, .words-box, .sign-box {
-                font-weight: 700 !important;
-            }
+            select { -webkit-appearance: none; appearance: none; border: none; }
+            .items-table th, .items-table td { border: 1px solid black !important; }
+            .vendor-header, .meta-box, .tax-card, .amount-card, .sign-box { border: 1px solid black !important; }
+            .print-payment-display { display: block; font-weight: 700; padding: 5px 0; }
+            .screen-payment { display: none; }
+            .print-gst-display { display: block; font-weight: 700; padding: 5px 0; margin-bottom: 8px; }
+            .screen-gst { display: none; }
+            .vendor-details, .contact-row, .row-flex, .meta-label, .meta-value, .tax-row, .words-box, .sign-box { font-weight: 700 !important; }
         }
     </style>
 </head>
@@ -452,8 +407,8 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th>SL</th><th>Item Description</th><th>HSN</th><th>Purity</th><th>Metal(g)</th>
-                        <th>Stone(g)</th><th>Net(g)</th><th>Rate/g</th><th>Making Type</th><th>Making %/₹</th>
+                        <th>SL</th><th>Item Description</th><th>HSN</th><th>Purity</th><th>Gross(g)</th>
+                        <th>Stone(g)</th><th>Net(g)</th><th>Rate/g</th><th>Making Value</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -491,7 +446,7 @@
                 <div class="tax-row"><span>Total GST Amount :</span><span id="totalGstAmount">₹0.00</span></div>
                 <div class="tax-row"><span>Total Making Charges :</span><span id="totalMakingValue">₹0.00</span></div>
                 <div class="tax-row"><span>Total Stone Value :</span><span id="totalStoneValue">₹0.00</span></div>
-                <div class="tax-row"><span>Total Metal Value :</span><span id="totalGoldValue">₹0.00</span></div>
+                <div class="tax-row"><span>Total Gross Value :</span><span id="totalGoldValue">₹0.00</span></div>
                 <div class="tax-row"><span>Total Taxable Value :</span><span id="totalTaxableValue">₹0.00</span></div>
                 <div class="tax-row"><span>Discount :</span><span id="discountShow">₹0.00</span></div>
                 <div class="tax-row grand-total-row"><span>GRAND TOTAL :</span><span id="grandTotalValue">₹0.00</span></div>
@@ -561,6 +516,11 @@
 
     function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
 
+    function isGoldPurity(purity) {
+        const goldPure = ['24K', '22K', '20K', '18K', '14K'];
+        return goldPure.includes(purity);
+    }
+
     function updateKycDisplay() {
         let pan = custPanInput.value.trim();
         let aadhar = custAadharInput.value.trim();
@@ -569,16 +529,15 @@
     }
 
     function updatePrintDisplay() {
-        // Update payment display for print
         let selected = [];
         document.querySelectorAll('#paymentGroup input:checked').forEach(cb => {
             selected.push(cb.value);
         });
         printPaymentDisplay.innerHTML = selected.join(', ') || 'Not Selected';
         
-        // Update GST display for print
+        // Show only selected GST type without label
         let gstText = currentTaxType === 'igst' ? 'IGST (Inter-State) - Single Tax' : 'CGST + SGST (Intra-State) - Split Tax';
-        printGstDisplay.innerHTML = `<strong>Tax Type:</strong> ${gstText}`;
+        printGstDisplay.innerHTML = gstText;
     }
 
     function setInvoiceMeta() {
@@ -605,7 +564,6 @@
 
     function switchTaxType() {
         currentTaxType = taxTypeSelect.value;
-        
         if(currentTaxType === 'igst') {
             igstSection.style.display = 'block';
             cgstSgstSection.style.display = 'none';
@@ -618,18 +576,18 @@
     }
 
     function calculateRow(row) {
-        let goldWt = toNumber(row.goldWt);
+        let grossWt = toNumber(row.grossWt);
         let stoneWt = toNumber(row.stoneWt);
         let rate = toNumber(row.ratePerGram);
         
-        row.netWt = goldWt + stoneWt;
+        row.netWt = grossWt + stoneWt;
+        let grossValue = grossWt * rate;
         
-        let goldValue = goldWt * rate;
-        
+        // Calculate making value based on purity (Gold = %, Silver = Fixed)
         let makingValue = 0;
-        if (row.makingType === 'percentage') {
+        if (isGoldPurity(row.purity)) {
             let makingPercent = toNumber(row.makingPercent);
-            makingValue = goldValue * (makingPercent / 100);
+            makingValue = grossValue * (makingPercent / 100);
         } else {
             makingValue = toNumber(row.makingFixed);
         }
@@ -638,18 +596,18 @@
         let stoneValue = stoneWt * rate;
         row.stoneValue = stoneValue;
         
-        let total = goldValue + makingValue + stoneValue;
+        let total = grossValue + makingValue + stoneValue;
         row.rowTotal = total;
         
-        return { goldValue, makingValue, stoneValue, total };
+        return { grossValue, makingValue, stoneValue, total };
     }
 
     function recalcAll() {
-        let totalGold = 0, totalMaking = 0, totalStone = 0, totalTaxable = 0;
+        let totalGross = 0, totalMaking = 0, totalStone = 0, totalTaxable = 0;
         
         for(let i=0; i<itemsData.length; i++) {
             let result = calculateRow(itemsData[i]);
-            totalGold += result.goldValue;
+            totalGross += result.grossValue;
             totalMaking += result.makingValue;
             totalStone += result.stoneValue;
             totalTaxable += result.total;
@@ -681,7 +639,7 @@
         totalGstAmountSpan.innerHTML = `₹${totalGst.toFixed(2)}`;
         totalMakingSpan.innerHTML = `₹${totalMaking.toFixed(2)}`;
         totalStoneSpan.innerHTML = `₹${totalStone.toFixed(2)}`;
-        totalGoldSpan.innerHTML = `₹${totalGold.toFixed(2)}`;
+        totalGoldSpan.innerHTML = `₹${totalGross.toFixed(2)}`;
         
         let grandTotal = afterDiscount + totalGst;
         if(grandTotal < 0) grandTotal = 0;
@@ -733,12 +691,22 @@
         return convert(n);
     }
 
+    function updateMakingInputForRow(row, makingInput) {
+        if (isGoldPurity(row.purity)) {
+            makingInput.placeholder = '%';
+            makingInput.value = row.makingPercent || 10;
+        } else {
+            makingInput.placeholder = '₹';
+            makingInput.value = row.makingFixed || 0;
+        }
+    }
+
     function renderTableRows() {
         tbody.innerHTML = '';
         if(itemsData.length === 0) {
             let tr = document.createElement('tr');
             let td = document.createElement('td');
-            td.colSpan = 11;
+            td.colSpan = 10;
             td.style.textAlign = 'center';
             td.style.padding = '20px';
             td.style.color = '#adb5bd';
@@ -752,10 +720,12 @@
             let row = itemsData[idx];
             let tr = document.createElement('tr');
             
+            // SL No
             let tdSl = document.createElement('td');
             tdSl.innerText = idx+1;
             tr.appendChild(tdSl);
             
+            // Item Description
             let tdDesc = document.createElement('td');
             let descInput = document.createElement('input');
             descInput.type = 'text';
@@ -766,6 +736,7 @@
             tdDesc.appendChild(descInput);
             tr.appendChild(tdDesc);
             
+            // HSN
             let tdHsn = document.createElement('td');
             let hsnInput = document.createElement('input');
             hsnInput.type = 'text';
@@ -776,6 +747,7 @@
             tdHsn.appendChild(hsnInput);
             tr.appendChild(tdHsn);
             
+            // Purity
             let tdPurity = document.createElement('td');
             let puritySelect = document.createElement('select');
             let purityOptions = ['24K', '22K', '20K', '18K', '14K', 'Silver999', 'Silver Ornaments'];
@@ -786,20 +758,25 @@
                 if(row.purity === p) opt.selected = true;
                 puritySelect.appendChild(opt);
             });
-            puritySelect.onchange = (function(r) { return function(e) { r.purity = e.target.value; recalcAll(); }; })(row);
+            puritySelect.onchange = (function(r) { return function(e) { 
+                r.purity = e.target.value; 
+                recalcAll(); 
+            }; })(row);
             tdPurity.appendChild(puritySelect);
             tr.appendChild(tdPurity);
             
-            let tdGold = document.createElement('td');
-            let goldInput = document.createElement('input');
-            goldInput.type = 'number';
-            goldInput.value = row.goldWt || 0;
-            goldInput.step = '0.01';
-            goldInput.style.width = '50px';
-            goldInput.onchange = (function(r) { return function(e) { r.goldWt = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdGold.appendChild(goldInput);
-            tr.appendChild(tdGold);
+            // Gross Weight
+            let tdGross = document.createElement('td');
+            let grossInput = document.createElement('input');
+            grossInput.type = 'number';
+            grossInput.value = row.grossWt || 0;
+            grossInput.step = '0.01';
+            grossInput.style.width = '50px';
+            grossInput.onchange = (function(r) { return function(e) { r.grossWt = toNumber(e.target.value); recalcAll(); }; })(row);
+            tdGross.appendChild(grossInput);
+            tr.appendChild(tdGross);
             
+            // Stone Weight
             let tdStone = document.createElement('td');
             let stoneInput = document.createElement('input');
             stoneInput.type = 'number';
@@ -810,10 +787,12 @@
             tdStone.appendChild(stoneInput);
             tr.appendChild(tdStone);
             
+            // Net Weight
             let tdNet = document.createElement('td');
             tdNet.innerText = (row.netWt || 0).toFixed(3);
             tr.appendChild(tdNet);
             
+            // Rate/g
             let tdRate = document.createElement('td');
             let rateInput = document.createElement('input');
             rateInput.type = 'number';
@@ -824,33 +803,13 @@
             tdRate.appendChild(rateInput);
             tr.appendChild(tdRate);
             
-            let tdMakingType = document.createElement('td');
-            let makingSelect = document.createElement('select');
-            makingSelect.className = 'making-select';
-            
-            let goldOption = document.createElement('option');
-            goldOption.value = 'percentage';
-            goldOption.innerText = 'Gold %';
-            let silverOption = document.createElement('option');
-            silverOption.value = 'fixed';
-            silverOption.innerText = 'Silver ₹';
-            
-            makingSelect.appendChild(goldOption);
-            makingSelect.appendChild(silverOption);
-            makingSelect.value = row.makingType || 'percentage';
-            makingSelect.onchange = (function(r) { return function(e) { 
-                r.makingType = e.target.value; 
-                recalcAll(); 
-            }; })(row);
-            tdMakingType.appendChild(makingSelect);
-            tr.appendChild(tdMakingType);
-            
+            // Making Value Input
             let tdMakingInput = document.createElement('td');
             let makingInput = document.createElement('input');
             makingInput.type = 'number';
             makingInput.step = '0.1';
-            makingInput.style.width = '50px';
-            if (row.makingType === 'percentage') {
+            makingInput.style.width = '60px';
+            if (isGoldPurity(row.purity)) {
                 makingInput.value = row.makingPercent || 10;
                 makingInput.placeholder = '%';
             } else {
@@ -858,7 +817,7 @@
                 makingInput.placeholder = '₹';
             }
             makingInput.onchange = (function(r) { return function(e) {
-                if (r.makingType === 'percentage') {
+                if (isGoldPurity(r.purity)) {
                     r.makingPercent = toNumber(e.target.value);
                 } else {
                     r.makingFixed = toNumber(e.target.value);
@@ -868,6 +827,7 @@
             tdMakingInput.appendChild(makingInput);
             tr.appendChild(tdMakingInput);
             
+            // Delete Button
             let tdAction = document.createElement('td');
             let delBtn = document.createElement('button');
             delBtn.innerHTML = '❌';
@@ -891,14 +851,14 @@
             tbody.appendChild(tr);
         }
         
+        // Update dynamic cells
         for(let i=0; i<itemsData.length && tbody.children[i]; i++) {
             let cells = tbody.children[i].cells;
-            if(cells.length >= 11) {
+            if(cells.length >= 10) {
                 cells[6].innerText = (itemsData[i].netWt || 0).toFixed(3);
-                
-                let makingInput = cells[9].querySelector('input');
+                let makingInput = cells[8].querySelector('input');
                 if (makingInput) {
-                    if (itemsData[i].makingType === 'percentage') {
+                    if (isGoldPurity(itemsData[i].purity)) {
                         makingInput.placeholder = '%';
                         makingInput.value = itemsData[i].makingPercent || 10;
                     } else {
@@ -913,8 +873,8 @@
     function addNewItem() {
         itemsData.push({
             itemDesc: '', hsn: '7113', purity: '22K',
-            goldWt: 0, stoneWt: 0, netWt: 0,
-            ratePerGram: 5200, makingType: 'percentage', makingPercent: 10, makingFixed: 0,
+            grossWt: 0, stoneWt: 0, netWt: 0,
+            ratePerGram: 5200, makingPercent: 10, makingFixed: 0,
             makingValue: 0, stoneValue: 0, rowTotal: 0
         });
         recalcAll();
@@ -986,7 +946,6 @@
     
     taxTypeSelect.onchange = switchTaxType;
     
-    // Update print display when payment checkboxes change
     document.querySelectorAll('#paymentGroup input').forEach(cb => {
         cb.onchange = updatePrintDisplay;
     });
