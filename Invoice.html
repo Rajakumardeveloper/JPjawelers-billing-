@@ -360,7 +360,8 @@
             <div class="vendor-details">
                 <strong>Sold By:</strong> JP JEWELLERS PVT LTD<br>
                 <strong>Address:</strong> Lalganj, Bairia, Ballia - 277216<br>
-                <strong>GSTIN:</strong> 09ATUPP1565AIZF | <strong>PAN:</strong> XXXXXXXXXX | </div>
+                <strong>GSTIN:</strong> 09ATUPP1565AIZF | <strong>PAN:</strong> XXXXXXXXXX
+            </div>
             <div class="contact-row">
                 <strong>Contact:</strong> 9919463098 , 9956624200
             </div>
@@ -516,7 +517,7 @@
     function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
 
     function isGoldPurity(purity) {
-        const goldPure = ['24K', '22K', '20K', '18K', '14K'];
+        const goldPure = ['24K', '22K', '20K', '18K', '14K', '9K'];
         return goldPure.includes(purity);
     }
 
@@ -534,7 +535,6 @@
         });
         printPaymentDisplay.innerHTML = selected.join(', ') || 'Not Selected';
         
-        // Show only selected GST type without label
         let gstText = currentTaxType === 'igst' ? 'IGST (Inter-State) - Single Tax' : 'CGST + SGST (Intra-State) - Split Tax';
         printGstDisplay.innerHTML = gstText;
     }
@@ -582,7 +582,6 @@
         row.netWt = grossWt + stoneWt;
         let grossValue = grossWt * rate;
         
-        // Calculate making value based on purity (Gold = %, Silver = Fixed)
         let makingValue = 0;
         if (isGoldPurity(row.purity)) {
             let makingPercent = toNumber(row.makingPercent);
@@ -690,16 +689,6 @@
         return convert(n);
     }
 
-    function updateMakingInputForRow(row, makingInput) {
-        if (isGoldPurity(row.purity)) {
-            makingInput.placeholder = '%';
-            makingInput.value = row.makingPercent || 10;
-        } else {
-            makingInput.placeholder = '₹';
-            makingInput.value = row.makingFixed || 0;
-        }
-    }
-
     function renderTableRows() {
         tbody.innerHTML = '';
         if(itemsData.length === 0) {
@@ -719,12 +708,10 @@
             let row = itemsData[idx];
             let tr = document.createElement('tr');
             
-            // SL No
             let tdSl = document.createElement('td');
             tdSl.innerText = idx+1;
             tr.appendChild(tdSl);
             
-            // Item Description
             let tdDesc = document.createElement('td');
             let descInput = document.createElement('input');
             descInput.type = 'text';
@@ -735,7 +722,6 @@
             tdDesc.appendChild(descInput);
             tr.appendChild(tdDesc);
             
-            // HSN
             let tdHsn = document.createElement('td');
             let hsnInput = document.createElement('input');
             hsnInput.type = 'text';
@@ -746,10 +732,9 @@
             tdHsn.appendChild(hsnInput);
             tr.appendChild(tdHsn);
             
-            // Purity
             let tdPurity = document.createElement('td');
             let puritySelect = document.createElement('select');
-            let purityOptions = ['24K', '22K', '20K', '18K', '14K', '9k', 'Silver999', 'Silver Ornaments'];
+            let purityOptions = ['24K', '22K', '20K', '18K', '14K', '9K', 'Silver999', 'Silver Ornaments'];
             purityOptions.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p;
@@ -764,7 +749,6 @@
             tdPurity.appendChild(puritySelect);
             tr.appendChild(tdPurity);
             
-            // Gross Weight
             let tdGross = document.createElement('td');
             let grossInput = document.createElement('input');
             grossInput.type = 'number';
@@ -775,7 +759,6 @@
             tdGross.appendChild(grossInput);
             tr.appendChild(tdGross);
             
-            // Stone Weight
             let tdStone = document.createElement('td');
             let stoneInput = document.createElement('input');
             stoneInput.type = 'number';
@@ -786,12 +769,10 @@
             tdStone.appendChild(stoneInput);
             tr.appendChild(tdStone);
             
-            // Net Weight
             let tdNet = document.createElement('td');
             tdNet.innerText = (row.netWt || 0).toFixed(3);
             tr.appendChild(tdNet);
             
-            // Rate/g
             let tdRate = document.createElement('td');
             let rateInput = document.createElement('input');
             rateInput.type = 'number';
@@ -802,7 +783,6 @@
             tdRate.appendChild(rateInput);
             tr.appendChild(tdRate);
             
-            // Making Value Input
             let tdMakingInput = document.createElement('td');
             let makingInput = document.createElement('input');
             makingInput.type = 'number';
@@ -826,7 +806,6 @@
             tdMakingInput.appendChild(makingInput);
             tr.appendChild(tdMakingInput);
             
-            // Delete Button
             let tdAction = document.createElement('td');
             let delBtn = document.createElement('button');
             delBtn.innerHTML = '❌';
@@ -850,7 +829,6 @@
             tbody.appendChild(tr);
         }
         
-        // Update dynamic cells
         for(let i=0; i<itemsData.length && tbody.children[i]; i++) {
             let cells = tbody.children[i].cells;
             if(cells.length >= 10) {
