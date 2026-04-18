@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JP Jewellers | Purchase Bill - GST Purchase Register</title>
+    <title>JP Jewellers | Management Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,747 +14,729 @@
 
         body {
             background: #eef2f5;
-            font-family: 'Arial', 'Helvetica', 'Segoe UI', sans-serif;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
         }
 
-        .purchase-container {
+        .dashboard-container {
             max-width: 1400px;
-            width: 100%;
+            margin: 0 auto;
             background: white;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
-        .purchase-invoice {
-            padding: 20px 25px 25px 25px;
-            background: white;
+        .dashboard {
+            padding: 25px;
         }
 
-        .vendor-header {
+        .header {
             border: 1px solid #000;
-            padding: 12px 15px;
-            margin-bottom: 18px;
-            background: #fefefe;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
-        
-        .company-header {
+        .logo h2 {
+            color: #1e466e;
+            font-size: 20px;
+        }
+        .logo p {
+            font-size: 11px;
+            color: #666;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-green { background: #28a745; color: white; }
+        .btn-orange { background: #fd7e14; color: white; }
+        .btn-blue { background: #1e466e; color: white; }
+        .btn-yellow { background: #ffc107; color: #000; }
+        .btn-cyan { background: #17a2b8; color: white; }
+        .btn-gray { background: #6c757d; color: white; }
+        .btn-red { background: #dc3545; color: white; }
+        .btn:hover { opacity: 0.85; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+        }
+        .tab {
+            padding: 10px 25px;
+            background: #f0f2f5;
+            border: 1px solid #aaa;
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+        }
+        .tab.active {
+            background: #1e466e;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            border: 1px solid #000;
+            padding: 15px;
+        }
+        .stat-card h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .filters {
+            border: 1px solid #000;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-box {
+            border: 1px solid #aaa;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 8px;
+            flex: 1;
         }
-        .company-icon {
-            width: 33px;
-            height: 33px;
-            border-radius: 8px;
-            overflow: hidden;
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+        .filter-select {
+            padding: 6px 10px;
+            border: 1px solid #aaa;
+        }
+        .sort-btn {
+            padding: 6px 12px;
+            border: 1px solid #aaa;
+            background: white;
+            cursor: pointer;
+        }
+        .sort-btn.active {
             background: #1e466e;
+            color: white;
+        }
+
+        .table-wrapper {
+            border: 1px solid #000;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .action-btn {
+            background: none;
+            border: 1px solid #aaa;
+            padding: 4px 8px;
+            margin: 0 3px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .action-btn.view { color: #1e466e; }
+        .action-btn.delete { color: #dc3545; }
+        .empty-row {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
         }
-        .company-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
         }
-        .company-icon .no-image {
-            font-size: 16px;
-            color: white;
-            font-weight: bold;
+        .modal-box {
+            background: white;
+            border: 1px solid #000;
+            max-width: 500px;
+            width: 90%;
+            padding: 25px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
-        .vendor-name {
-            font-size: 18px;
-            font-weight: 800;
-            color: #1e466e;
-        }
-        
-        .title-badge {
-            background: #1e466e;
-            color: white;
-            padding: 4px 12px;
-            display: inline-block;
-            border-radius: 20px;
-            font-size: 11px;
-            margin-bottom: 8px;
-        }
-        .row-flex {
+        .modal-header {
             display: flex;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 8px;
-        }
-
-        .purchase-meta {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 18px;
-        }
-        .meta-box {
-            border: 1px solid #000;
-            padding: 10px 12px;
-            background: white;
-        }
-        .meta-title {
-            font-weight: 800;
-            font-size: 12px;
-            background: #f0f2f5;
-            padding: 4px 8px;
-            margin: -10px -12px 10px -12px;
-            border-bottom: 1px solid #000;
-        }
-        .meta-row {
-            display: flex;
-            margin-bottom: 6px;
-            font-size: 11px;
             align-items: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
-        .meta-label {
-            width: 100px;
-            font-weight: 600;
-            font-size: 10px;
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
         }
-        .meta-value {
-            flex: 1;
+        .detail-row {
+            display: flex;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
         }
-        .meta-value input, .meta-value select {
-            width: 100%;
-            padding: 4px 6px;
-            border: 1px solid #aaa;
-            font-size: 10px;
-        }
-
-        .items-wrapper {
-            border: 1px solid #000;
-            margin: 15px 0;
-            overflow-x: auto;
-            background: white;
-        }
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9px;
-        }
-        .items-table th, .items-table td {
-            border: 1px solid #000;
-            padding: 6px 4px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .items-table th {
-            background: #e9ecef;
-            font-weight: 800;
-            font-size: 8px;
-            padding: 6px 3px;
-        }
-        .items-table input {
-            width: 100%;
-            padding: 3px;
-            border: 1px solid #ccc;
-            font-size: 9px;
-            text-align: center;
-        }
-        .delete-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
+        .detail-label {
+            width: 110px;
             font-weight: bold;
         }
-        .delete-btn:hover {
-            background: #c82333;
-        }
-        .add-item-btn {
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
             background: #28a745;
             color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 10px;
-            margin-right: auto;
-            font-weight: bold;
-        }
-
-        .totals-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 18px;
-            margin: 15px 0;
-        }
-        .summary-card {
-            border: 1px solid #000;
-            padding: 10px 12px;
-            background: white;
-        }
-        .summary-card h5 {
-            background: #e9ecef;
-            margin: -10px -12px 10px -12px;
-            padding: 6px 10px;
-            border-bottom: 1px solid #000;
-            font-size: 11px;
-            font-weight: 800;
-        }
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .grand-total-row {
-            border-top: 2px solid #000;
-            margin-top: 8px;
-            padding-top: 6px;
-            font-weight: 800;
-            font-size: 13px;
-        }
-        .words-box {
-            background: #f8f9fa;
-            padding: 8px;
-            margin-top: 10px;
-            font-size: 10px;
-            font-weight: 700;
-            border-left: 3px solid #1e466e;
-        }
-
-        .signature-footer {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin: 20px 0 15px;
-            border-top: 1px solid #000;
-            padding-top: 15px;
-            background: white;
-        }
-        .sign-box {
-            border: 1px solid #000;
-            padding: 12px;
-            min-height: 70px;
-            text-align: center;
-            font-size: 10px;
-            font-weight: 500;
-        }
-
-        .action-bar {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 18px;
-            padding-top: 12px;
-            border-top: 1px solid #ddd;
-            background: white;
-        }
-        button {
-            color: white;
-            border: none;
-            padding: 8px 18px;
+            padding: 10px 20px;
             border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
         }
-        .btn-save { background: #28a745; }
-        .btn-save:hover { background: #218838; }
-        .btn-print { background: #1e466e; }
-        .btn-print:hover { background: #163a5a; }
-        .btn-reset { background: #6c757d; }
-        .btn-reset:hover { background: #5a6268; }
-
-        @media print {
-            @page { size: A4; margin: 8mm; }
-            body { background: white; padding: 0; margin: 0; }
-            .action-bar, .add-item-btn, .delete-btn { display: none !important; }
-            .purchase-invoice { padding: 0; margin: 0; }
-            input, select {
-                border: none !important;
-                background: transparent !important;
-                padding: 0 !important;
-                font-size: 9px !important;
-                color: black !important;
-            }
-            .items-table th, .items-table td { border: 1px solid black !important; }
-            .vendor-header, .meta-box, .summary-card, .sign-box { border: 1px solid black !important; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
-<div class="purchase-container">
-    <div class="purchase-invoice">
-        <div class="vendor-header">
-            <div class="company-header">
-                <div class="company-icon">
-                    <img src="icon.png" alt="JP Jewellers Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'no-image\'>JP</div>'">
+<div class="dashboard-container">
+    <div class="dashboard">
+        <div class="header">
+            <div class="logo">
+                <h2><i class="fas fa-gem"></i> J.P JEWELLERS</h2>
+                <p>Management Dashboard | GSTIN: 29AAAFJ1234P1ZR</p>
+            </div>
+            <div class="buttons">
+                <button class="btn btn-yellow" id="backupBtn"><i class="fas fa-download"></i> Backup</button>
+                <button class="btn btn-cyan" id="restoreBtn"><i class="fas fa-upload"></i> Restore</button>
+                <button class="btn btn-blue" id="printBtn"><i class="fas fa-print"></i> Print</button>
+                <button class="btn btn-gray" id="refreshBtn"><i class="fas fa-sync"></i> Refresh</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="sales">📄 Sales Invoices</div>
+            <div class="tab" data-tab="purchase">🛒 Purchase Bills</div>
+        </div>
+
+        <div id="salesTab" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card"><h4>Total Invoices</h4><div class="value" id="totalSales">0</div></div>
+                <div class="stat-card"><h4>Total Revenue</h4><div class="value" id="totalRevenue">₹0</div></div>
+                <div class="stat-card"><h4>Unique Customers</h4><div class="value" id="uniqueCustomers">0</div></div>
+                <div class="stat-card"><h4>Avg Invoice</h4><div class="value" id="avgSales">₹0</div></div>
+            </div>
+
+            <div class="filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="salesSearch" placeholder="Search by customer, invoice...">
                 </div>
-                <div class="vendor-name">J.P JEWELLERS - Purchase Bill</div>
+                <select id="paymentFilter" class="filter-select">
+                    <option value="">All Payments</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Card">Card</option>
+                </select>
+                <input type="date" id="dateFilter" class="filter-select">
+                <button class="sort-btn" id="sortSalesNew">Newest</button>
+                <button class="sort-btn" id="sortSalesOld">Oldest</button>
+                <button class="sort-btn" id="sortSalesHigh">Highest</button>
+                <button id="clearSalesFilter" class="btn-gray btn" style="padding:6px 12px;">Clear</button>
             </div>
-            <div class="title-badge">PURCHASE INVOICE (GST Purchase Register)</div>
-            <div class="vendor-details" style="font-size:10px; margin-top:5px;">
-                <strong>Shop Name:</strong> JP JEWELLERS PVT LTD<br>
-                <strong>Address:</strong> Lalganj, Bairia, Ballia - 277216
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Invoice No</th><th>Customer Name</th><th>Date</th><th>Amount</th><th>Payment</th><th>Items</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="salesBody">
+                        <tr><td colspan="7" class="empty-row">No invoices found. Create your first invoice!</td></tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="row-flex">
-                <span><strong>Purchase Bill No:</strong> <span id="purchaseNo"></span></span>
-                <span><strong>Purchase Date:</strong> <span id="purchaseDate"></span></span>
-                <span><strong>GSTIN:</strong> <input type="text" id="companyGstin" value="09ATUPP1565AIZF" style="width:140px; border:1px solid #aaa; padding:2px 4px;"></span>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn btn-green" id="newInvoiceBtn"><i class="fas fa-plus"></i> New Sales Invoice</button>
             </div>
         </div>
 
-        <div class="purchase-meta">
-            <div class="meta-box">
-                <div class="meta-title">Supplier Details</div>
-                <div class="meta-row"><div class="meta-label">GSTIN of Party</div><div class="meta-value"><input type="text" id="partyGstin" placeholder="Party GSTIN"></div></div>
-                <div class="meta-row"><div class="meta-label">Name of Party *</div><div class="meta-value"><input type="text" id="partyName" placeholder="Supplier Name"></div></div>
-                <div class="meta-row"><div class="meta-label">Bill Number</div><div class="meta-value"><input type="text" id="billNumber" placeholder="Supplier Bill No."></div></div>
-                <div class="meta-row"><div class="meta-label">Month/Year</div><div class="meta-value">
-                    <select id="monthSelect" style="width:48%;"><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option><option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option selected>Dec</option></select>
-                    <select id="yearSelect" style="width:48%;"><option>2023</option><option>2024</option><option>2025</option><option selected>2026</option></select>
-                </div></div>
+        <div id="purchaseTab" class="tab-content">
+            <div class="stats">
+                <div class="stat-card"><h4>Total Purchases</h4><div class="value" id="totalPurchase">0</div></div>
+                <div class="stat-card"><h4>Total Value</h4><div class="value" id="totalPurchaseValue">₹0</div></div>
+                <div class="stat-card"><h4>Unique Suppliers</h4><div class="value" id="uniqueSuppliers">0</div></div>
+                <div class="stat-card"><h4>Avg Purchase</h4><div class="value" id="avgPurchase">₹0</div></div>
             </div>
-            <div class="meta-box">
-                <div class="meta-title">Purchase Details</div>
-                <div class="meta-row"><div class="meta-label">Bill Type</div><div class="meta-value">
-                    <select id="billType"><option>GST Purchase</option><option>Non-GST Purchase</option><option>Cash Purchase</option></select>
-                </div></div>
-                <div class="meta-row"><div class="meta-label">Discount (₹)</div><div class="meta-value"><input type="number" id="discountAmount" value="0" step="1"></div></div>
-            </div>
-        </div>
 
-        <div class="items-wrapper">
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>SL</th><th>HSN / ITEM DESCRIPTION</th><th>QTY</th><th>RATE</th>
-                        <th>TAXABLE VALUE</th><th>CGST%</th><th>CGST AMT</th>
-                        <th>SGST%</th><th>SGST AMT</th><th>TOTAL TAX</th>
-                        <th>ADD/OTHER CHARGES</th><th>TOTAL BILL VALUE</th><th>ACTION</th>
-                    </tr>
-                </thead>
-                <tbody id="purchaseRows"></tbody>
-            </table>
-        </div>
-        <div style="margin-bottom: 10px;">
-            <button class="add-item-btn" id="addItemBtn">+ Add Item</button>
-        </div>
-
-        <div class="totals-grid">
-            <div class="summary-card">
-                <h5>Purchase Summary</h5>
-                <div class="summary-row"><span>Total Taxable Value :</span><span id="totalTaxableValue">₹0.00</span></div>
-                <div class="summary-row"><span>Total CGST Amount :</span><span id="totalCgstAmount">₹0.00</span></div>
-                <div class="summary-row"><span>Total SGST Amount :</span><span id="totalSgstAmount">₹0.00</span></div>
-                <div class="summary-row"><span>Total Tax (CGST+SGST) :</span><span id="totalTaxAmount">₹0.00</span></div>
-                <div class="summary-row"><span>Total Additional Charges :</span><span id="totalAddCharges">₹0.00</span></div>
-                <div class="summary-row"><span>Discount :</span><span id="discountShow">₹0.00</span></div>
-                <div class="summary-row grand-total-row"><span>GRAND TOTAL :</span><span id="grandTotalValue">₹0.00</span></div>
-            </div>
-            <div class="summary-card">
-                <h5>Amount in Words</h5>
-                <div class="words-box" id="amountWords">Zero Rupees Only</div>
-                <div style="margin-top: 10px; font-size: 8px; text-align: center;">
-                    ** Goods once purchased will not be taken back. **
+            <div class="filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="purchaseSearch" placeholder="Search by supplier, bill no...">
                 </div>
+                <select id="billTypeFilter" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="GST Purchase">GST Purchase</option>
+                    <option value="Non-GST Purchase">Non-GST Purchase</option>
+                    <option value="Cash Purchase">Cash Purchase</option>
+                </select>
+                <input type="date" id="purchaseDateFilter" class="filter-select">
+                <button class="sort-btn" id="sortPurchaseNew">Newest</button>
+                <button class="sort-btn" id="sortPurchaseOld">Oldest</button>
+                <button class="sort-btn" id="sortPurchaseHigh">Highest</button>
+                <button id="clearPurchaseFilter" class="btn-gray btn" style="padding:6px 12px;">Clear</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Bill No</th><th>Supplier Name</th><th>Date</th><th>Amount</th><th>Bill Type</th><th>Items</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="purchaseBody">
+                        <tr><td colspan="7" class="empty-row">No purchase bills found. Create your first purchase!</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="btn btn-orange" id="newPurchaseBtn"><i class="fas fa-plus"></i> New Purchase Bill</button>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="signature-footer">
-            <div class="sign-box">
-                <strong>Prepared By</strong><br><br><br>
-                (Store In-charge)
-            </div>
-            <div class="sign-box">For J.P JEWELLERS<br><br>_________________________<br>Authorised Signatory<br>(Company Seal)</div>
-        </div>
-        <div style="font-size: 7px; text-align: center; border-top: 1px solid #ccc; padding-top: 5px;">
-            This is a computer generated purchase invoice | GSTIN: 09ATUPP1565AIZF
-        </div>
+<!-- View Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>Details</h3><button class="close-modal" onclick="closeModal('viewModal')">&times;</button></div>
+        <div id="viewContent"></div>
+        <div class="modal-footer"><button class="btn-gray" onclick="closeModal('viewModal')">Close</button></div>
+    </div>
+</div>
 
-        <div class="action-bar">
-            <button id="resetBtn" class="btn-reset">🔄 Reset</button>
-            <button id="savePurchaseBtn" class="btn-save">💾 Save Purchase</button>
-            <button id="printBtn" class="btn-print">🖨️ Print / PDF</button>
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>Confirm Delete</h3><button class="close-modal" onclick="closeModal('deleteModal')">&times;</button></div>
+        <p>⚠️ This action will permanently delete this record. Cannot be undone!</p>
+        <div class="modal-footer">
+            <button class="btn-gray" onclick="closeModal('deleteModal')">Cancel</button>
+            <button class="btn-red" id="confirmDeleteBtn">Delete Permanently</button>
         </div>
     </div>
 </div>
 
 <script>
-    let purchaseItems = [];
-    let purchaseCounter = 1;
-
-    const tbody = document.getElementById('purchaseRows');
-    const addBtn = document.getElementById('addItemBtn');
-    const saveBtn = document.getElementById('savePurchaseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const printBtn = document.getElementById('printBtn');
-    const discountInput = document.getElementById('discountAmount');
+    let salesData = [];
+    let purchaseData = [];
+    let pendingDelete = { id: null, type: null };
     
-    const totalTaxableSpan = document.getElementById('totalTaxableValue');
-    const totalCgstSpan = document.getElementById('totalCgstAmount');
-    const totalSgstSpan = document.getElementById('totalSgstAmount');
-    const totalTaxSpan = document.getElementById('totalTaxAmount');
-    const totalAddSpan = document.getElementById('totalAddCharges');
-    const discountShowSpan = document.getElementById('discountShow');
-    const grandTotalSpan = document.getElementById('grandTotalValue');
-    const amountWordsSpan = document.getElementById('amountWords');
-    const purchaseNoSpan = document.getElementById('purchaseNo');
+    let salesFilter = { search: '', payment: '', date: '', sort: 'newest' };
+    let purchaseFilter = { search: '', billType: '', date: '', sort: 'newest' };
 
-    function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
-
-    // Get today's date in YYYYMMDD format
-    function getTodayDateCode() {
-        let now = new Date();
-        let y = now.getFullYear();
-        let m = String(now.getMonth()+1).padStart(2,'0');
-        let d = String(now.getDate()).padStart(2,'0');
-        return `${y}${m}${d}`;
-    }
-
-    // Get formatted date for display
-    function getFormattedDate() {
-        let now = new Date();
-        let d = String(now.getDate()).padStart(2,'0');
-        let m = String(now.getMonth()+1).padStart(2,'0');
-        let y = now.getFullYear();
-        return `${d}/${m}/${y}`;
-    }
-
-    // Get next purchase number for today's date
-    function getNextPurchaseNumber() {
-        let todayCode = getTodayDateCode();
-        let existingPurchases = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
-        
-        // Filter purchases made today
-        let todayPurchases = existingPurchases.filter(p => {
-            return p.purchaseNo && p.purchaseNo.startsWith(`PUR-${todayCode}`);
-        });
-        
-        let nextNumber = todayPurchases.length + 1;
-        return `PUR-${todayCode}-${String(nextNumber).padStart(3,'0')}`;
-    }
-
-    function updatePurchaseNumber() {
-        purchaseNoSpan.innerText = getNextPurchaseNumber();
-    }
-
-    function setPurchaseMeta() {
-        document.getElementById('purchaseDate').innerText = getFormattedDate();
-        updatePurchaseNumber();
-    }
-
-    function calculateRow(row) {
-        let qty = toNumber(row.qty);
-        let rate = toNumber(row.rate);
-        let taxable = qty * rate;
-        row.taxableValue = taxable;
-        
-        let cgstPercent = toNumber(row.cgstPercent);
-        let sgstPercent = toNumber(row.sgstPercent);
-        let cgstAmount = taxable * (cgstPercent / 100);
-        let sgstAmount = taxable * (sgstPercent / 100);
-        row.cgstAmount = cgstAmount;
-        row.sgstAmount = sgstAmount;
-        
-        let totalTax = cgstAmount + sgstAmount;
-        row.totalTax = totalTax;
-        
-        let addCharges = toNumber(row.addCharges);
-        let totalBill = taxable + totalTax + addCharges;
-        row.totalBillValue = totalBill;
-        
-        return { taxable, cgstAmount, sgstAmount, totalTax, totalBill };
-    }
-
-    function recalcAll() {
-        let totalTaxable = 0, totalCgst = 0, totalSgst = 0, totalTaxSum = 0, totalAdd = 0, totalGrand = 0;
-        
-        for(let i=0; i<purchaseItems.length; i++) {
-            let result = calculateRow(purchaseItems[i]);
-            totalTaxable += result.taxable;
-            totalCgst += result.cgstAmount;
-            totalSgst += result.sgstAmount;
-            totalTaxSum += result.totalTax;
-            totalAdd += toNumber(purchaseItems[i].addCharges);
-            totalGrand += result.totalBill;
+    function loadData() {
+        let storedSales = localStorage.getItem('jp_jewellers_invoices_list');
+        if (storedSales) {
+            try {
+                salesData = JSON.parse(storedSales);
+                if (!Array.isArray(salesData)) salesData = [];
+            } catch(e) { salesData = []; }
+        } else {
+            salesData = [];
         }
         
-        let discount = toNumber(discountInput.value);
-        let finalGrand = totalGrand - discount;
-        if(finalGrand < 0) finalGrand = 0;
+        let storedPurchase = localStorage.getItem('jp_purchases_list');
+        if (storedPurchase) {
+            try {
+                purchaseData = JSON.parse(storedPurchase);
+                if (!Array.isArray(purchaseData)) purchaseData = [];
+            } catch(e) { purchaseData = []; }
+        } else {
+            purchaseData = [];
+        }
         
-        totalTaxableSpan.innerText = `₹${totalTaxable.toFixed(2)}`;
-        totalCgstSpan.innerText = `₹${totalCgst.toFixed(2)}`;
-        totalSgstSpan.innerText = `₹${totalSgst.toFixed(2)}`;
-        totalTaxSpan.innerText = `₹${totalTaxSum.toFixed(2)}`;
-        totalAddSpan.innerText = `₹${totalAdd.toFixed(2)}`;
-        discountShowSpan.innerText = `₹${discount.toFixed(2)}`;
-        grandTotalSpan.innerText = `₹${finalGrand.toFixed(2)}`;
-        amountWordsSpan.innerText = convertToIndianWords(Math.abs(finalGrand));
-        
-        renderTableRows();
+        updateStats();
+        renderSales();
+        renderPurchase();
     }
 
-    function convertToIndianWords(num) {
-        if(num === 0) return "Zero Rupees Only";
-        let rupees = Math.floor(num);
-        let paise = Math.round((num - rupees) * 100);
-        let words = convertNumberToIndian(rupees) + " Rupees";
-        if(paise > 0) words += " and " + convertNumberToIndian(paise) + " Paise";
-        return words + " Only";
-    }
-    
-    function convertNumberToIndian(n) {
-        if(n === 0) return "";
-        const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-        const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-        function underHundred(num) {
-            if(num < 20) return units[num];
-            return tens[Math.floor(num/10)] + (num%10 ? " " + units[num%10] : "");
-        }
-        function convert(num) {
-            if(num === 0) return "";
-            let crore = Math.floor(num/10000000);
-            let lakhRem = num % 10000000;
-            let lakh = Math.floor(lakhRem/100000);
-            let thousandRem = lakhRem % 100000;
-            let thousand = Math.floor(thousandRem/1000);
-            let hundredRem = thousandRem % 1000;
-            let hundred = Math.floor(hundredRem/100);
-            let rest = hundredRem % 100;
-            let result = "";
-            if(crore) result += convert(crore) + " Crore ";
-            if(lakh) result += convert(lakh) + " Lakh ";
-            if(thousand) result += convert(thousand) + " Thousand ";
-            if(hundred) result += units[hundred] + " Hundred ";
-            if(rest) result += underHundred(rest);
-            return result.trim();
-        }
-        return convert(n);
+    function saveSales() {
+        localStorage.setItem('jp_jewellers_invoices_list', JSON.stringify(salesData));
     }
 
-    function renderTableRows() {
-        tbody.innerHTML = '';
-        if(purchaseItems.length === 0) {
-            let tr = document.createElement('tr');
-            let td = document.createElement('td');
-            td.colSpan = 13;
-            td.style.textAlign = 'center';
-            td.style.padding = '20px';
-            td.style.color = '#adb5bd';
-            td.innerHTML = '— Click "Add Item" to add purchase items —';
-            tr.appendChild(td);
-            tbody.appendChild(tr);
+    function savePurchase() {
+        localStorage.setItem('jp_purchases_list', JSON.stringify(purchaseData));
+    }
+
+    function updateStats() {
+        let totalSales = salesData.length;
+        let totalRevenue = salesData.reduce((s, i) => s + (i.amount || 0), 0);
+        let uniqueCust = new Set(salesData.map(i => i.customerName)).size;
+        let avgSales = totalSales > 0 ? totalRevenue / totalSales : 0;
+        document.getElementById('totalSales').innerText = totalSales;
+        document.getElementById('totalRevenue').innerHTML = `₹${totalRevenue.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
+        document.getElementById('uniqueCustomers').innerText = uniqueCust;
+        document.getElementById('avgSales').innerHTML = `₹${avgSales.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
+        
+        let totalPurchase = purchaseData.length;
+        let totalPurchaseVal = purchaseData.reduce((s, i) => s + (i.amount || 0), 0);
+        let uniqueSupp = new Set(purchaseData.map(i => i.partyName)).size;
+        let avgPurchase = totalPurchase > 0 ? totalPurchaseVal / totalPurchase : 0;
+        document.getElementById('totalPurchase').innerText = totalPurchase;
+        document.getElementById('totalPurchaseValue').innerHTML = `₹${totalPurchaseVal.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
+        document.getElementById('uniqueSuppliers').innerText = uniqueSupp;
+        document.getElementById('avgPurchase').innerHTML = `₹${avgPurchase.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
+    }
+
+    function renderSales() {
+        let filtered = [...salesData];
+        
+        if (salesFilter.search) {
+            let term = salesFilter.search.toLowerCase();
+            filtered = filtered.filter(i => 
+                (i.customerName && i.customerName.toLowerCase().includes(term)) ||
+                (i.invoiceNo && i.invoiceNo.toLowerCase().includes(term))
+            );
+        }
+        if (salesFilter.payment) {
+            filtered = filtered.filter(i => i.paymentMode === salesFilter.payment);
+        }
+        if (salesFilter.date) {
+            filtered = filtered.filter(i => i.date === salesFilter.date);
+        }
+        
+        if (salesFilter.sort === 'newest') {
+            filtered.sort((a,b) => new Date(b.date?.split('/').reverse().join('-')) - new Date(a.date?.split('/').reverse().join('-')));
+        } else if (salesFilter.sort === 'oldest') {
+            filtered.sort((a,b) => new Date(a.date?.split('/').reverse().join('-')) - new Date(b.date?.split('/').reverse().join('-')));
+        } else if (salesFilter.sort === 'highest') {
+            filtered.sort((a,b) => (b.amount || 0) - (a.amount || 0));
+        }
+        
+        let tbody = document.getElementById('salesBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No invoices found</td></tr>';
             return;
         }
         
-        for(let idx=0; idx<purchaseItems.length; idx++) {
-            let row = purchaseItems[idx];
-            let tr = document.createElement('tr');
-            
-            // SL No
-            let tdSl = document.createElement('td');
-            tdSl.innerText = idx+1;
-            tr.appendChild(tdSl);
-            
-            // HSN / Item Description
-            let tdDesc = document.createElement('td');
-            let descInput = document.createElement('input');
-            descInput.type = 'text';
-            descInput.value = row.itemDesc || '';
-            descInput.placeholder = 'HSN / Item';
-            descInput.style.minWidth = '120px';
-            descInput.onchange = (function(r) { return function(e) { r.itemDesc = e.target.value; recalcAll(); }; })(row);
-            tdDesc.appendChild(descInput);
-            tr.appendChild(tdDesc);
-            
-            // QTY
-            let tdQty = document.createElement('td');
-            let qtyInput = document.createElement('input');
-            qtyInput.type = 'number';
-            qtyInput.value = row.qty || 0;
-            qtyInput.step = '0.01';
-            qtyInput.style.width = '65px';
-            qtyInput.onchange = (function(r) { return function(e) { r.qty = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdQty.appendChild(qtyInput);
-            tr.appendChild(tdQty);
-            
-            // RATE
-            let tdRate = document.createElement('td');
-            let rateInput = document.createElement('input');
-            rateInput.type = 'number';
-            rateInput.value = row.rate || 0;
-            rateInput.step = '1';
-            rateInput.style.width = '75px';
-            rateInput.onchange = (function(r) { return function(e) { r.rate = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdRate.appendChild(rateInput);
-            tr.appendChild(tdRate);
-            
-            // TAXABLE VALUE
-            let tdTaxable = document.createElement('td');
-            tdTaxable.innerText = `₹${(row.taxableValue || 0).toFixed(2)}`;
-            tr.appendChild(tdTaxable);
-            
-            // CGST %
-            let tdCgstPer = document.createElement('td');
-            let cgstInput = document.createElement('input');
-            cgstInput.type = 'number';
-            cgstInput.value = row.cgstPercent || 1.5;
-            cgstInput.step = '0.1';
-            cgstInput.style.width = '55px';
-            cgstInput.onchange = (function(r) { return function(e) { r.cgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdCgstPer.appendChild(cgstInput);
-            tr.appendChild(tdCgstPer);
-            
-            // CGST AMOUNT
-            let tdCgstAmt = document.createElement('td');
-            tdCgstAmt.innerText = `₹${(row.cgstAmount || 0).toFixed(2)}`;
-            tr.appendChild(tdCgstAmt);
-            
-            // SGST %
-            let tdSgstPer = document.createElement('td');
-            let sgstInput = document.createElement('input');
-            sgstInput.type = 'number';
-            sgstInput.value = row.sgstPercent || 1.5;
-            sgstInput.step = '0.1';
-            sgstInput.style.width = '55px';
-            sgstInput.onchange = (function(r) { return function(e) { r.sgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdSgstPer.appendChild(sgstInput);
-            tr.appendChild(tdSgstPer);
-            
-            // SGST AMOUNT
-            let tdSgstAmt = document.createElement('td');
-            tdSgstAmt.innerText = `₹${(row.sgstAmount || 0).toFixed(2)}`;
-            tr.appendChild(tdSgstAmt);
-            
-            // TOTAL TAX
-            let tdTotalTax = document.createElement('td');
-            tdTotalTax.innerText = `₹${(row.totalTax || 0).toFixed(2)}`;
-            tr.appendChild(tdTotalTax);
-            
-            // ADD / OTHER CHARGES
-            let tdAdd = document.createElement('td');
-            let addInput = document.createElement('input');
-            addInput.type = 'number';
-            addInput.value = row.addCharges || 0;
-            addInput.step = '1';
-            addInput.style.width = '70px';
-            addInput.onchange = (function(r) { return function(e) { r.addCharges = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdAdd.appendChild(addInput);
-            tr.appendChild(tdAdd);
-            
-            // TOTAL BILL VALUE
-            let tdTotalBill = document.createElement('td');
-            tdTotalBill.innerText = `₹${(row.totalBillValue || 0).toFixed(2)}`;
-            tdTotalBill.style.fontWeight = 'bold';
-            tr.appendChild(tdTotalBill);
-            
-            // ACTION
-            let tdAction = document.createElement('td');
-            let delBtn = document.createElement('button');
-            delBtn.innerHTML = '❌';
-            delBtn.className = 'delete-btn';
-            delBtn.onclick = (function(i) { return function() { purchaseItems.splice(i,1); recalcAll(); }; })(idx);
-            tdAction.appendChild(delBtn);
-            tr.appendChild(tdAction);
-            
-            tbody.appendChild(tr);
-        }
+        let html = '';
+        filtered.forEach(inv => {
+            let items = inv.items?.map(i => i.itemDesc).join(', ') || '-';
+            html += `<tr>
+                <td>${inv.invoiceNo || '-'}</td>
+                <td><strong>${escapeHtml(inv.customerName || '-')}</strong></td>
+                <td>${inv.date || '-'}</td>
+                <td>₹${(inv.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                <td><span style="padding:2px 6px; border:1px solid #aaa; border-radius:3px;">${inv.paymentMode || 'Cash'}</span></td>
+                <td>${escapeHtml(items.substring(0, 40))}</td>
+                <td>
+                    <button class="action-btn view" onclick="viewSales('${inv.invoiceNo}')"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn delete" onclick="confirmDelete('${inv.invoiceNo}', 'sales')"><i class="fas fa-trash"></i> Del</button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
     }
 
-    function addNewItem() {
-        purchaseItems.push({
-            itemDesc: '', qty: 0, rate: 0, taxableValue: 0,
-            cgstPercent: 1.5, cgstAmount: 0,
-            sgstPercent: 1.5, sgstAmount: 0,
-            totalTax: 0, addCharges: 0, totalBillValue: 0
+    function renderPurchase() {
+        let filtered = [...purchaseData];
+        
+        if (purchaseFilter.search) {
+            let term = purchaseFilter.search.toLowerCase();
+            filtered = filtered.filter(i => 
+                (i.partyName && i.partyName.toLowerCase().includes(term)) ||
+                (i.purchaseNo && i.purchaseNo.toLowerCase().includes(term))
+            );
+        }
+        if (purchaseFilter.billType) {
+            filtered = filtered.filter(i => i.billType === purchaseFilter.billType);
+        }
+        if (purchaseFilter.date) {
+            filtered = filtered.filter(i => i.purchaseDate === purchaseFilter.date);
+        }
+        
+        if (purchaseFilter.sort === 'newest') {
+            filtered.sort((a,b) => new Date(b.purchaseDate?.split('/').reverse().join('-')) - new Date(a.purchaseDate?.split('/').reverse().join('-')));
+        } else if (purchaseFilter.sort === 'oldest') {
+            filtered.sort((a,b) => new Date(a.purchaseDate?.split('/').reverse().join('-')) - new Date(b.purchaseDate?.split('/').reverse().join('-')));
+        } else if (purchaseFilter.sort === 'highest') {
+            filtered.sort((a,b) => (b.amount || 0) - (a.amount || 0));
+        }
+        
+        let tbody = document.getElementById('purchaseBody');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No purchase bills found</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        filtered.forEach(p => {
+            let items = p.items?.map(i => i.itemDesc).join(', ') || '-';
+            html += `<tr>
+                <td>${p.purchaseNo || '-'}</td>
+                <td><strong>${escapeHtml(p.partyName || '-')}</strong></td>
+                <td>${p.purchaseDate || '-'}</td>
+                <td>₹${(p.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                <td><span style="padding:2px 6px; border:1px solid #aaa; border-radius:3px;">${p.billType || 'GST Purchase'}</span></td>
+                <td>${escapeHtml(items.substring(0, 40))}</td>
+                <td>
+                    <button class="action-btn view" onclick="viewPurchase('${p.purchaseNo}')"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn delete" onclick="confirmDelete('${p.purchaseNo}', 'purchase')"><i class="fas fa-trash"></i> Del</button>
+                </td>
+            </tr>`;
         });
-        recalcAll();
+        tbody.innerHTML = html;
     }
-    
-    function savePurchaseToLocalStorage() {
-        let partyName = document.getElementById('partyName').value.trim();
-        if(partyName === '') { alert('Please enter Party Name'); return false; }
-        if(purchaseItems.length === 0) { alert('Please add at least one item'); return false; }
-        
-        let grandTotalText = grandTotalSpan.innerText;
-        let grandTotal = parseFloat(grandTotalText.replace('₹', '').replace(/,/g, '')) || 0;
-        
-        const purchaseObj = {
-            purchaseNo: purchaseNoSpan.innerText,
-            purchaseDate: document.getElementById('purchaseDate').innerText,
-            partyName: partyName,
-            partyGstin: document.getElementById('partyGstin').value,
-            billNumber: document.getElementById('billNumber').value,
-            billType: document.getElementById('billType').value,
-            discount: document.getElementById('discountAmount').value,
-            items: purchaseItems.map(item => ({...item})),
-            totalAmount: grandTotal,
-            savedAt: new Date().toISOString()
+
+    function viewSales(id) {
+        let item = salesData.find(i => i.invoiceNo === id);
+        if (!item) return;
+        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc)}</strong> - ₹${(it.total || it.rowTotal || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('');
+        document.getElementById('viewContent').innerHTML = `
+            <div class="detail-row"><div class="detail-label">Invoice No:</div><div>${item.invoiceNo}</div></div>
+            <div class="detail-row"><div class="detail-label">Customer:</div><div>${escapeHtml(item.customerName)}</div></div>
+            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.date}</div></div>
+            <div class="detail-row"><div class="detail-label">Payment:</div><div>${item.paymentMode}</div></div>
+            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Total:</div><div><strong>₹${(item.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</strong></div></div>
+        `;
+        openModal('viewModal');
+    }
+
+    function viewPurchase(id) {
+        let item = purchaseData.find(i => i.purchaseNo === id);
+        if (!item) return;
+        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc)}</strong> - Qty:${it.qty} × ₹${it.rate} = ₹${(it.qty*it.rate).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('');
+        document.getElementById('viewContent').innerHTML = `
+            <div class="detail-row"><div class="detail-label">Bill No:</div><div>${item.purchaseNo}</div></div>
+            <div class="detail-row"><div class="detail-label">Supplier:</div><div>${escapeHtml(item.partyName)}</div></div>
+            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.purchaseDate}</div></div>
+            <div class="detail-row"><div class="detail-label">Bill Type:</div><div>${item.billType}</div></div>
+            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Total:</div><div><strong>₹${(item.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</strong></div></div>
+        `;
+        openModal('viewModal');
+    }
+
+    function confirmDelete(id, type) {
+        pendingDelete = { id: id, type: type };
+        openModal('deleteModal');
+    }
+
+    function deleteRecord() {
+        if (pendingDelete.type === 'sales') {
+            salesData = salesData.filter(i => i.invoiceNo !== pendingDelete.id);
+            saveSales();
+            updateStats();
+            renderSales();
+            showToast('✓ Invoice deleted permanently');
+        } else if (pendingDelete.type === 'purchase') {
+            purchaseData = purchaseData.filter(i => i.purchaseNo !== pendingDelete.id);
+            savePurchase();
+            updateStats();
+            renderPurchase();
+            showToast('✓ Purchase bill deleted permanently');
+        }
+        closeModal('deleteModal');
+        pendingDelete = { id: null, type: null };
+    }
+
+    function backupData() {
+        let backup = {
+            invoices: salesData,
+            purchases: purchaseData,
+            backupDate: new Date().toISOString()
         };
-        
-        let existing = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
-        existing.unshift(purchaseObj);
-        localStorage.setItem('jp_purchases_list', JSON.stringify(existing));
-        
-        // Update purchase number for next purchase
-        updatePurchaseNumber();
-        
-        let msg = document.createElement('div');
-        msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#28a745;color:white;padding:10px 18px;border-radius:5px;z-index:1000;font-size:12px;';
-        msg.innerHTML = '✓ Purchase saved successfully!';
-        document.body.appendChild(msg);
-        setTimeout(() => msg.remove(), 2000);
-        
-        // Optional: Reset form after save
-        if(confirm('Purchase saved! Do you want to start a new purchase?')) {
-            resetForm();
-        }
-        return true;
+        let blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = `jp_backup_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('✅ Backup saved!');
     }
-    
-    function resetForm() {
-        if(confirm('Reset all fields? Current data will be lost.')) {
-            purchaseItems = [];
-            document.getElementById('partyGstin').value = '';
-            document.getElementById('partyName').value = '';
-            document.getElementById('billNumber').value = '';
-            document.getElementById('discountAmount').value = '0';
-            document.getElementById('billType').value = 'GST Purchase';
-            setPurchaseMeta();
-            recalcAll();
-        }
+
+    function restoreData() {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            let file = e.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    let data = JSON.parse(ev.target.result);
+                    if (data.invoices) salesData = data.invoices;
+                    if (data.purchases) purchaseData = data.purchases;
+                    saveSales();
+                    savePurchase();
+                    updateStats();
+                    renderSales();
+                    renderPurchase();
+                    showToast('✅ Data restored!');
+                } catch(err) { alert('Invalid backup file'); }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
     }
-    
-    function validateAndPrint() {
-        let partyName = document.getElementById('partyName').value.trim();
-        if(partyName === '') { 
-            alert('Please enter Party Name before printing'); 
-            return false; 
-        }
-        if(purchaseItems.length === 0) { 
-            alert('Please add at least one item before printing'); 
-            return false; 
-        }
+
+    function printDashboard() {
         window.print();
-        return true;
     }
+
+    function refreshAll() {
+        loadData();
+        showToast('🔄 Refreshed');
+    }
+
+    function showToast(msg) {
+        let toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+    }
+
+    // ========== FIXED: Navigation to purchasebill.html ==========
+    document.getElementById('newInvoiceBtn').onclick = function() {
+        window.location.href = 'invoice.html';
+    };
     
-    addBtn.onclick = addNewItem;
-    saveBtn.onclick = savePurchaseToLocalStorage;
-    resetBtn.onclick = resetForm;
-    printBtn.onclick = validateAndPrint;
-    discountInput.onchange = recalcAll;
+    document.getElementById('newPurchaseBtn').onclick = function() {
+        window.location.href = 'purchasebill.html';
+    };
     
-    setPurchaseMeta();
-    purchaseItems = [];
-    addNewItem(); // Start with one empty row
+    document.getElementById('backupBtn').onclick = backupData;
+    document.getElementById('restoreBtn').onclick = restoreData;
+    document.getElementById('printBtn').onclick = printDashboard;
+    document.getElementById('refreshBtn').onclick = refreshAll;
+    document.getElementById('confirmDeleteBtn').onclick = deleteRecord;
+    
+    // Sales filters
+    document.getElementById('salesSearch').oninput = (e) => { salesFilter.search = e.target.value; renderSales(); };
+    document.getElementById('paymentFilter').onchange = (e) => { salesFilter.payment = e.target.value; renderSales(); };
+    document.getElementById('dateFilter').onchange = (e) => { salesFilter.date = e.target.value; renderSales(); };
+    document.getElementById('sortSalesNew').onclick = () => { salesFilter.sort = 'newest'; renderSales(); };
+    document.getElementById('sortSalesOld').onclick = () => { salesFilter.sort = 'oldest'; renderSales(); };
+    document.getElementById('sortSalesHigh').onclick = () => { salesFilter.sort = 'highest'; renderSales(); };
+    document.getElementById('clearSalesFilter').onclick = () => {
+        document.getElementById('salesSearch').value = '';
+        document.getElementById('paymentFilter').value = '';
+        document.getElementById('dateFilter').value = '';
+        salesFilter = { search: '', payment: '', date: '', sort: 'newest' };
+        renderSales();
+    };
+    
+    // Purchase filters
+    document.getElementById('purchaseSearch').oninput = (e) => { purchaseFilter.search = e.target.value; renderPurchase(); };
+    document.getElementById('billTypeFilter').onchange = (e) => { purchaseFilter.billType = e.target.value; renderPurchase(); };
+    document.getElementById('purchaseDateFilter').onchange = (e) => { purchaseFilter.date = e.target.value; renderPurchase(); };
+    document.getElementById('sortPurchaseNew').onclick = () => { purchaseFilter.sort = 'newest'; renderPurchase(); };
+    document.getElementById('sortPurchaseOld').onclick = () => { purchaseFilter.sort = 'oldest'; renderPurchase(); };
+    document.getElementById('sortPurchaseHigh').onclick = () => { purchaseFilter.sort = 'highest'; renderPurchase(); };
+    document.getElementById('clearPurchaseFilter').onclick = () => {
+        document.getElementById('purchaseSearch').value = '';
+        document.getElementById('billTypeFilter').value = '';
+        document.getElementById('purchaseDateFilter').value = '';
+        purchaseFilter = { search: '', billType: '', date: '', sort: 'newest' };
+        renderPurchase();
+    };
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.onclick = () => switchTab(tab.getAttribute('data-tab'));
+    });
+    
+    window.onclick = (e) => {
+        if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+    };
+    
+    loadData();
 </script>
 </body>
 </html>
