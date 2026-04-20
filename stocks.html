@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JP Jewellers · Stock Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -13,214 +14,367 @@
 
     body {
       background: #eef2f5;
-      font-family: 'Arial', 'Helvetica', 'Segoe UI', sans-serif;
-      padding: 15px;
-      display: flex;
-      justify-content: center;
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
     }
 
-    .app-container {
+    .dashboard-container {
       max-width: 1500px;
-      width: 100%;
+      margin: 0 auto;
       background: white;
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
 
-    /* Tabs navigation */
-    .nav-tabs {
-      display: flex;
-      background: #1e466e;
-      padding: 0 20px;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-    .nav-tab {
-      padding: 12px 22px;
-      background: transparent;
-      color: #ddd;
-      border: none;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      transition: 0.2s;
-      border-bottom: 3px solid transparent;
-    }
-    .nav-tab.active {
-      color: white;
-      background: #163a5a;
-      border-bottom: 3px solid #ffc107;
-    }
-    .nav-tab:hover {
-      background: #2a5a8c;
-      color: white;
+    .dashboard {
+      padding: 25px;
     }
 
+    /* Header */
+    .header {
+      border: 1px solid #000;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      background: white;
+    }
+    .logo h2 {
+      color: #1e466e;
+      font-size: 20px;
+    }
+    .logo p {
+      font-size: 11px;
+      color: #666;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-green { background: #28a745; color: white; }
+    .btn-blue { background: #1e466e; color: white; }
+    .btn-gray { background: #6c757d; color: white; }
+    .btn-purple { background: #6f42c1; color: white; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #000;
+    }
+    .tab {
+      padding: 10px 25px;
+      background: #f0f2f5;
+      border: 1px solid #aaa;
+      border-bottom: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 8px 8px 0 0;
+      font-size: 13px;
+    }
+    .tab i { margin-right: 6px; }
+    .tab.active {
+      background: #1e466e;
+      color: white;
+    }
     .tab-content {
       display: none;
-      padding: 20px 25px 25px 25px;
-      background: white;
     }
     .tab-content.active {
       display: block;
     }
 
-    /* reuse existing styles */
-    .purchase-invoice, .products-panel, .sales-panel, .stock-panel {
+    /* Stats Cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      border: 1px solid #000;
+      padding: 15px;
+      background: white;
+    }
+    .stat-card h4 {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1e466e;
+    }
+
+    /* Meta boxes (Purchase/Sales forms) */
+    .purchase-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .meta-box {
+      border: 1px solid #000;
+      padding: 10px 12px;
+      background: white;
+    }
+    .meta-title {
+      font-weight: 800;
+      font-size: 12px;
+      background: #f0f2f5;
+      padding: 4px 8px;
+      margin: -10px -12px 10px -12px;
+      border-bottom: 1px solid #000;
+    }
+    .meta-row {
+      display: flex;
+      margin-bottom: 6px;
+      font-size: 11px;
+      align-items: center;
+    }
+    .meta-label {
+      width: 110px;
+      font-weight: 600;
+      font-size: 10px;
+    }
+    .meta-value input, .meta-value select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #aaa;
+      font-size: 11px;
       background: white;
     }
 
-    .vendor-header {
-      border: 1px solid #000;
-      padding: 12px 15px;
-      margin-bottom: 18px;
-      background: #fefefe;
-    }
-    .company-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    .company-icon {
-      width: 33px; height: 33px; border-radius: 8px; overflow: hidden;
-      background: #1e466e; display: flex; align-items: center; justify-content: center;
-    }
-    .company-icon .no-image {
-      font-size: 16px; color: white; font-weight: bold;
-    }
-    .vendor-name {
-      font-size: 18px; font-weight: 800; color: #1e466e;
-    }
-    .title-badge {
-      background: #1e466e; color: white; padding: 4px 12px;
-      display: inline-block; border-radius: 20px; font-size: 11px; margin-bottom: 8px;
-    }
-    .row-flex {
-      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-top: 8px;
-    }
-    .purchase-meta {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;
-    }
-    .meta-box {
-      border: 1px solid #000; padding: 10px 12px; background: white;
-    }
-    .meta-title {
-      font-weight: 800; font-size: 12px; background: #f0f2f5; padding: 4px 8px;
-      margin: -10px -12px 10px -12px; border-bottom: 1px solid #000;
-    }
-    .meta-row {
-      display: flex; margin-bottom: 6px; font-size: 11px; align-items: center;
-    }
-    .meta-label {
-      width: 110px; font-weight: 600; font-size: 10px;
-    }
-    .meta-value input, .meta-value select {
-      width: 100%; padding: 4px 6px; border: 1px solid #aaa; font-size: 10px;
-    }
-
+    /* Items Table */
     .items-wrapper {
-      border: 1px solid #000; margin: 15px 0; overflow-x: auto;
+      border: 1px solid #000;
+      margin: 15px 0;
+      overflow-x: auto;
+      background: white;
     }
     .items-table {
-      width: 100%; border-collapse: collapse; font-size: 9px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
     }
     .items-table th, .items-table td {
-      border: 1px solid #000; padding: 6px 4px; text-align: center;
+      border: 1px solid #000;
+      padding: 6px 4px;
+      text-align: center;
     }
     .items-table th {
-      background: #e9ecef; font-weight: 800; font-size: 8px;
+      background: #e9ecef;
+      font-weight: 800;
+      font-size: 9px;
     }
     .items-table input, .items-table select {
-      width: 100%; padding: 3px; border: 1px solid #ccc; font-size: 9px; text-align: center;
+      width: 100%;
+      padding: 4px;
+      border: 1px solid #ccc;
+      font-size: 9px;
+      text-align: center;
+      background: white;
     }
     .delete-btn {
-      background: #dc3545; color: white; border: none; padding: 5px 8px;
-      border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
     }
     .add-btn {
-      background: #28a745; color: white; border: none; padding: 6px 14px;
-      border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
+
+    /* Totals Grid */
     .totals-grid {
-      display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; margin: 15px 0;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 18px;
+      margin: 15px 0;
     }
     .summary-card {
-      border: 1px solid #000; padding: 10px 12px;
+      border: 1px solid #000;
+      padding: 10px 12px;
+      background: white;
     }
     .summary-card h5 {
-      background: #e9ecef; margin: -10px -12px 10px -12px; padding: 6px 10px;
-      border-bottom: 1px solid #000; font-size: 11px;
+      background: #e9ecef;
+      margin: -10px -12px 10px -12px;
+      padding: 6px 10px;
+      border-bottom: 1px solid #000;
+      font-size: 11px;
     }
     .summary-row {
-      display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
     }
     .grand-total-row {
-      border-top: 2px solid #000; margin-top: 8px; padding-top: 6px; font-weight: 800; font-size: 13px;
+      border-top: 2px solid #000;
+      margin-top: 8px;
+      padding-top: 6px;
+      font-weight: 800;
+      font-size: 13px;
     }
     .words-box {
-      background: #f8f9fa; padding: 8px; margin-top: 10px; font-size: 10px; font-weight: 700;
+      background: #f8f9fa;
+      padding: 8px;
+      margin-top: 10px;
+      font-size: 10px;
+      font-weight: 700;
       border-left: 3px solid #1e466e;
     }
-    .action-bar {
-      display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px;
-      padding-top: 12px; border-top: 1px solid #ddd;
-    }
-    button {
-      color: white; border: none; padding: 8px 18px; border-radius: 5px;
-      font-weight: 600; cursor: pointer; font-size: 11px;
-    }
-    .btn-save { background: #28a745; }
-    .btn-print { background: #1e466e; }
-    .btn-reset { background: #6c757d; }
-    .btn-warning { background: #fd7e14; }
 
-    /* product master table */
-    .master-table {
-      width: 100%; border-collapse: collapse; font-size: 11px;
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid #ddd;
+    }
+
+    /* Master Table */
+    .table-wrapper {
       border: 1px solid #000;
+      overflow-x: auto;
+      background: white;
+      margin-top: 15px;
+    }
+    .master-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
     }
     .master-table th, .master-table td {
-      border: 1px solid #000; padding: 8px 5px; text-align: center;
+      border: 1px solid #ddd;
+      padding: 8px 5px;
+      text-align: center;
     }
     .master-table th {
-      background: #1e466e; color: white;
+      background: #1e466e;
+      color: white;
+      font-weight: bold;
+    }
+    .master-table input, .master-table select {
+      width: 100%;
+      padding: 4px;
+      border: 1px solid #ccc;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .section-header h3 {
+      color: #1e466e;
+      font-size: 16px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1001;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .row-flex {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 8px;
+      font-size: 11px;
     }
 
     @media print {
-      .nav-tabs, .action-bar, .add-btn, .delete-btn { display: none !important; }
+      .tabs, .action-bar, .add-btn, .delete-btn, .header .buttons { display: none !important; }
       body { background: white; }
       .tab-content { display: block !important; }
     }
   </style>
 </head>
 <body>
-<div class="app-container">
-  <!-- Tabs navigation -->
-  <div class="nav-tabs">
-    <button class="nav-tab active" data-tab="purchase">📦 Purchase (Stock In)</button>
-    <button class="nav-tab" data-tab="sales">💰 Sales (Stock Out)</button>
-    <button class="nav-tab" data-tab="products">📋 Product Master</button>
-    <button class="nav-tab" data-tab="stock">📊 Stock Report</button>
-  </div>
-
-  <!-- PURCHASE TAB (stock in) -->
-  <div id="purchase" class="tab-content active">
-    <div class="purchase-invoice">
-      <div class="vendor-header">
-        <div class="company-header">
-          <div class="company-icon"><div class="no-image">JP</div></div>
-          <div class="vendor-name">J.P JEWELLERS · Purchase / Stock In</div>
-        </div>
-        <div class="title-badge">GST PURCHASE REGISTER (INVENTORY IN)</div>
-        <div style="font-size:10px; margin-top:5px;">
-          <strong>Shop:</strong> JP JEWELLERS PVT LTD, Lalganj, Bairia, Ballia - 277216
-        </div>
-        <div class="row-flex">
-          <span><strong>Bill No:</strong> <span id="purchaseNo"></span></span>
-          <span><strong>Date:</strong> <span id="purchaseDate"></span></span>
-          <span><strong>GSTIN:</strong> <input type="text" id="companyGstin" value="09ATUPP1565AIZF" style="width:140px;"></span>
-        </div>
+<div class="dashboard-container">
+  <div class="dashboard">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <h2><i class="fas fa-gem"></i> J.P JEWELLERS</h2>
+        <p>Stock Management System | GSTIN: 09ATUPP1565AIZF | Lalganj, Bairia, Ballia - 277216</p>
       </div>
+      <div class="buttons">
+        <button class="btn btn-purple" id="backToDashboardBtn"><i class="fas fa-arrow-left"></i> Dashboard</button>
+        <button class="btn btn-green" id="exportStockBtn"><i class="fas fa-download"></i> Export</button>
+        <button class="btn btn-blue" id="printStockBtn"><i class="fas fa-print"></i> Print</button>
+        <button class="btn btn-gray" id="refreshStockBtn"><i class="fas fa-sync"></i> Refresh</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="purchase"><i class="fas fa-arrow-down"></i> Purchase (Stock In)</div>
+      <div class="tab" data-tab="sales"><i class="fas fa-arrow-up"></i> Sales (Stock Out)</div>
+      <div class="tab" data-tab="products"><i class="fas fa-box"></i> Product Master</div>
+      <div class="tab" data-tab="stock"><i class="fas fa-chart-bar"></i> Stock Report</div>
+    </div>
+
+    <!-- PURCHASE TAB -->
+    <div id="purchase" class="tab-content active">
+      <div class="stats">
+        <div class="stat-card"><h4>Total Purchases</h4><div class="value" id="purchaseCount">0</div></div>
+        <div class="stat-card"><h4>Total Purchase Value</h4><div class="value" id="purchaseTotalValue">₹0</div></div>
+        <div class="stat-card"><h4>Items in Stock</h4><div class="value" id="totalItemsStock">0</div></div>
+        <div class="stat-card"><h4>Stock Value</h4><div class="value" id="headerStockValue">₹0</div></div>
+      </div>
+
       <div class="purchase-meta">
         <div class="meta-box">
           <div class="meta-title">Supplier Details</div>
@@ -236,20 +390,23 @@
           <div class="meta-title">Purchase Details</div>
           <div class="meta-row"><span class="meta-label">Bill Type</span><div class="meta-value"><select id="billType"><option>GST Purchase</option><option>Non-GST</option></select></div></div>
           <div class="meta-row"><span class="meta-label">Discount (₹)</span><div class="meta-value"><input id="discountAmount" value="0" step="1" type="number"></div></div>
+          <div class="meta-row"><span class="meta-label">Bill No:</span><div class="meta-value"><strong><span id="purchaseNo"></span></strong></div></div>
+          <div class="meta-row"><span class="meta-label">Date:</span><div class="meta-value"><strong><span id="purchaseDate"></span></strong></div></div>
         </div>
       </div>
+
       <div class="items-wrapper">
-        <table class="items-table" id="purchaseItemsTable">
+        <table class="items-table">
           <thead>
-            <tr><th>#</th><th>Product (Select)</th><th>HSN</th><th>Wt(g)</th><th>Rate/g</th><th>Taxable</th>
-                <th>CGST%</th><th>CGST</th><th>SGST%</th><th>SGST</th><th>Total</th><th>Action</th></tr>
+            <tr><th>#</th><th>Product</th><th>HSN</th><th>Qty(g)</th><th>Rate/g</th><th>Taxable</th><th>CGST%</th><th>CGST</th><th>SGST%</th><th>SGST</th><th>Total</th><th>Action</th></tr>
           </thead>
           <tbody id="purchaseRows"></tbody>
         </table>
       </div>
-      <div><button class="add-btn" id="addPurchaseItemBtn">+ Add Item</button></div>
+      <button class="add-btn" id="addPurchaseItemBtn"><i class="fas fa-plus"></i> Add Item</button>
+
       <div class="totals-grid">
-        <div class="summary-card"><h5>Summary</h5>
+        <div class="summary-card"><h5>Purchase Summary</h5>
           <div class="summary-row"><span>Taxable Value:</span><span id="totalTaxableValue">₹0</span></div>
           <div class="summary-row"><span>CGST:</span><span id="totalCgstAmount">₹0</span></div>
           <div class="summary-row"><span>SGST:</span><span id="totalSgstAmount">₹0</span></div>
@@ -258,77 +415,91 @@
         </div>
         <div class="summary-card"><h5>Amount in Words</h5><div class="words-box" id="amountWords">Zero Rupees Only</div></div>
       </div>
+
       <div class="action-bar">
-        <button class="btn-reset" id="resetPurchaseBtn">🔄 Reset</button>
-        <button class="btn-save" id="savePurchaseBtn">💾 Save & Update Stock</button>
-        <button class="btn-print" id="printPurchaseBtn">🖨️ Print</button>
+        <button class="btn-gray" id="resetPurchaseBtn"><i class="fas fa-undo"></i> Reset</button>
+        <button class="btn-green" id="savePurchaseBtn"><i class="fas fa-save"></i> Save & Update Stock</button>
+        <button class="btn-blue" id="printPurchaseBtn"><i class="fas fa-print"></i> Print</button>
       </div>
     </div>
-  </div>
 
-  <!-- SALES TAB (stock out) -->
-  <div id="sales" class="tab-content">
-    <div class="purchase-invoice">
-      <div class="vendor-header">
-        <div class="company-header"><div class="company-icon"><div class="no-image">JP</div></div><div class="vendor-name">J.P JEWELLERS · Sales / Stock Out</div></div>
-        <div class="title-badge">SALES INVOICE (INVENTORY OUT)</div>
-        <div class="row-flex"><span><strong>Invoice No:</strong> <span id="salesInvoiceNo"></span></span><span><strong>Date:</strong> <span id="salesDate"></span></span></div>
+    <!-- SALES TAB -->
+    <div id="sales" class="tab-content">
+      <div class="stats">
+        <div class="stat-card"><h4>Total Sales</h4><div class="value" id="salesCount">0</div></div>
+        <div class="stat-card"><h4>Total Revenue</h4><div class="value" id="salesTotalValue">₹0</div></div>
+        <div class="stat-card"><h4>Items Sold</h4><div class="value" id="totalItemsSold">0</div></div>
+        <div class="stat-card"><h4>Avg Sale</h4><div class="value" id="avgSaleValue">₹0</div></div>
       </div>
+
       <div class="purchase-meta">
-        <div class="meta-box"><div class="meta-title">Customer</div>
+        <div class="meta-box"><div class="meta-title">Customer Details</div>
           <div class="meta-row"><span class="meta-label">Customer Name*</span><div class="meta-value"><input id="customerName" placeholder="Customer Name"></div></div>
-          <div class="meta-row"><span class="meta-label">Phone</span><div class="meta-value"><input id="customerPhone"></div></div>
+          <div class="meta-row"><span class="meta-label">Phone</span><div class="meta-value"><input id="customerPhone" placeholder="Phone"></div></div>
         </div>
-        <div class="meta-box"><div class="meta-title">Sale Details</div><div class="meta-row"><span class="meta-label">Discount</span><div class="meta-value"><input id="salesDiscount" value="0" type="number"></div></div></div>
+        <div class="meta-box"><div class="meta-title">Sale Details</div>
+          <div class="meta-row"><span class="meta-label">Discount (₹)</span><div class="meta-value"><input id="salesDiscount" value="0" type="number"></div></div>
+          <div class="meta-row"><span class="meta-label">Invoice No:</span><div class="meta-value"><strong><span id="salesInvoiceNo"></span></strong></div></div>
+          <div class="meta-row"><span class="meta-label">Date:</span><div class="meta-value"><strong><span id="salesDate"></span></strong></div></div>
+        </div>
       </div>
+
       <div class="items-wrapper">
-        <table class="items-table" id="salesItemsTable">
-          <thead><tr><th>#</th><th>Product</th><th>HSN</th><th>Wt(g)</th><th>Rate/g</th><th>Taxable</th><th>CGST%</th><th>CGST</th><th>SGST%</th><th>SGST</th><th>Total</th><th>Action</th></tr></thead>
+        <table class="items-table">
+          <thead><tr><th>#</th><th>Product</th><th>HSN</th><th>Qty(g)</th><th>Rate/g</th><th>Taxable</th><th>CGST%</th><th>CGST</th><th>SGST%</th><th>SGST</th><th>Total</th><th>Action</th></tr></thead>
           <tbody id="salesRows"></tbody>
         </table>
       </div>
-      <div><button class="add-btn" id="addSalesItemBtn">+ Add Item</button></div>
+      <button class="add-btn" id="addSalesItemBtn"><i class="fas fa-plus"></i> Add Item</button>
+
       <div class="totals-grid">
-        <div class="summary-card"><h5>Summary</h5>
+        <div class="summary-card"><h5>Sale Summary</h5>
           <div class="summary-row"><span>Taxable:</span><span id="salesTaxable">₹0</span></div>
           <div class="summary-row"><span>CGST:</span><span id="salesCgst">₹0</span></div>
           <div class="summary-row"><span>SGST:</span><span id="salesSgst">₹0</span></div>
           <div class="summary-row"><span>Discount:</span><span id="salesDiscountShow">₹0</span></div>
           <div class="summary-row grand-total-row"><span>TOTAL:</span><span id="salesGrandTotal">₹0</span></div>
         </div>
+        <div class="summary-card"><h5>Amount in Words</h5><div class="words-box" id="salesAmountWords">Zero Rupees Only</div></div>
       </div>
+
       <div class="action-bar">
-        <button class="btn-reset" id="resetSalesBtn">Reset</button>
-        <button class="btn-save" id="saveSalesBtn">💾 Save Sale (Reduce Stock)</button>
-        <button class="btn-print" id="printSalesBtn">Print</button>
+        <button class="btn-gray" id="resetSalesBtn"><i class="fas fa-undo"></i> Reset</button>
+        <button class="btn-green" id="saveSalesBtn"><i class="fas fa-save"></i> Save Sale</button>
+        <button class="btn-blue" id="printSalesBtn"><i class="fas fa-print"></i> Print</button>
       </div>
     </div>
-  </div>
 
-  <!-- PRODUCT MASTER TAB -->
-  <div id="products" class="tab-content">
-    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-      <h3 style="color:#1e466e;">📋 Product Master (Jewellery Items)</h3>
-      <button class="add-btn" id="addProductBtn">➕ Add New Product</button>
+    <!-- PRODUCT MASTER TAB -->
+    <div id="products" class="tab-content">
+      <div class="section-header">
+        <h3><i class="fas fa-box"></i> Product Master (Jewellery Items)</h3>
+        <button class="add-btn" id="addProductBtn"><i class="fas fa-plus"></i> Add New Product</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="master-table">
+          <thead><tr><th>Code</th><th>Description</th><th>HSN</th><th>Metal</th><th>Purity</th><th>Stock (g)</th><th>Rate/g (₹)</th><th>Actions</th></tr></thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
     </div>
-    <div style="overflow-x:auto;">
-      <table class="master-table" id="productsTable">
-        <thead><tr><th>Code</th><th>Description</th><th>HSN</th><th>Metal</th><th>Purity</th><th>Stock (g)</th><th>Rate/g (₹)</th><th>Actions</th></tr></thead>
-        <tbody id="productsBody"></tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- STOCK REPORT TAB -->
-  <div id="stock" class="tab-content">
-    <h3 style="color:#1e466e;">📊 Current Stock Valuation</h3>
-    <div style="overflow-x:auto; margin-top:15px;">
-      <table class="master-table" id="stockReportTable">
-        <thead><tr><th>Product</th><th>HSN</th><th>Metal/Purity</th><th>Stock (g)</th><th>Rate/g</th><th>Stock Value (₹)</th></tr></thead>
-        <tbody id="stockReportBody"></tbody>
-      </table>
+    <!-- STOCK REPORT TAB -->
+    <div id="stock" class="tab-content">
+      <div class="stats">
+        <div class="stat-card"><h4>Total Products</h4><div class="value" id="totalProducts">0</div></div>
+        <div class="stat-card"><h4>Total Stock (g)</h4><div class="value" id="totalStockWeight">0</div></div>
+        <div class="stat-card"><h4>Inventory Value</h4><div class="value" id="totalInventoryValue">₹0</div></div>
+        <div class="stat-card"><h4>Low Stock Items</h4><div class="value" id="lowStockCount">0</div></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="master-table">
+          <thead><tr><th>Product</th><th>HSN</th><th>Metal/Purity</th><th>Stock (g)</th><th>Rate/g</th><th>Stock Value (₹)</th></tr></thead>
+          <tbody id="stockReportBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px; text-align:right; font-weight:bold; font-size:14px;" id="totalStockValue">Total Inventory Value: ₹0</div>
     </div>
-    <div style="margin-top:20px; text-align:right; font-weight:bold;" id="totalStockValue">Total Inventory Value: ₹0</div>
   </div>
 </div>
 
@@ -341,17 +512,72 @@
     let purchaseList = JSON.parse(localStorage.getItem('jp_purchases_list')) || [];
     let salesList = JSON.parse(localStorage.getItem('jp_sales_list')) || [];
 
-    function saveProducts() { localStorage.setItem('jp_products', JSON.stringify(products)); }
-    function savePurchases() { localStorage.setItem('jp_purchases_list', JSON.stringify(purchaseList)); }
-    function saveSales() { localStorage.setItem('jp_sales_list', JSON.stringify(salesList)); }
+    function saveProducts() { localStorage.setItem('jp_products', JSON.stringify(products)); updateAllStats(); }
+    function savePurchases() { localStorage.setItem('jp_purchases_list', JSON.stringify(purchaseList)); updateAllStats(); }
+    function saveSales() { localStorage.setItem('jp_sales_list', JSON.stringify(salesList)); updateAllStats(); }
 
-    // Helper functions
     const toNum = (v, def=0) => { let n = parseFloat(v); return isNaN(n) ? def : n; };
     const formatINR = (n) => '₹' + n.toFixed(2);
     const todayCode = () => { let d=new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; };
     const formattedDate = () => { let d=new Date(); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
 
-    // ---------- PRODUCT MASTER (tab) ----------
+    function numberToWords(n) {
+      if(n===0) return 'Zero Rupees Only';
+      if(n < 0) return 'Negative ' + numberToWords(Math.abs(n));
+      const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+      
+      function convert(num) {
+        if(num < 20) return units[num];
+        if(num < 100) return tens[Math.floor(num/10)] + (num%10 ? ' ' + units[num%10] : '');
+        if(num < 1000) return units[Math.floor(num/100)] + ' Hundred' + (num%100 ? ' ' + convert(num%100) : '');
+        if(num < 100000) return convert(Math.floor(num/1000)) + ' Thousand' + (num%1000 ? ' ' + convert(num%1000) : '');
+        if(num < 10000000) return convert(Math.floor(num/100000)) + ' Lakh' + (num%100000 ? ' ' + convert(num%100000) : '');
+        return convert(Math.floor(num/10000000)) + ' Crore' + (num%10000000 ? ' ' + convert(num%10000000) : '');
+      }
+      let rupees = Math.floor(n);
+      let paise = Math.round((n - rupees) * 100);
+      let words = convert(rupees) + ' Rupees';
+      if(paise > 0) words += ' and ' + convert(paise) + ' Paise';
+      return words + ' Only';
+    }
+
+    function showToast(msg) {
+      let toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    // ---------- UPDATE ALL STATS ----------
+    function updateAllStats() {
+      // Purchase stats
+      document.getElementById('purchaseCount').innerText = purchaseList.length;
+      let totalPurchaseVal = purchaseList.reduce((s, p) => s + (toNum(p.grandTotal?.replace(/[^0-9.-]+/g,'')) || 0), 0);
+      document.getElementById('purchaseTotalValue').innerHTML = formatINR(totalPurchaseVal);
+      
+      // Sales stats
+      document.getElementById('salesCount').innerText = salesList.length;
+      let totalSalesVal = salesList.reduce((s, sale) => s + (toNum(sale.grandTotal?.replace(/[^0-9.-]+/g,'')) || 0), 0);
+      document.getElementById('salesTotalValue').innerHTML = formatINR(totalSalesVal);
+      document.getElementById('avgSaleValue').innerHTML = formatINR(salesList.length ? totalSalesVal / salesList.length : 0);
+      
+      // Stock stats
+      let totalStock = products.reduce((s, p) => s + toNum(p.stock), 0);
+      let stockValue = products.reduce((s, p) => s + (toNum(p.stock) * toNum(p.rate)), 0);
+      document.getElementById('totalItemsStock').innerText = totalStock.toFixed(2);
+      document.getElementById('headerStockValue').innerHTML = formatINR(stockValue);
+      document.getElementById('totalProducts').innerText = products.length;
+      document.getElementById('totalStockWeight').innerText = totalStock.toFixed(2);
+      document.getElementById('totalInventoryValue').innerHTML = formatINR(stockValue);
+      document.getElementById('lowStockCount').innerText = products.filter(p => toNum(p.stock) < 10).length;
+      
+      let itemsSold = salesList.reduce((s, sale) => s + (sale.items?.reduce((sum, i) => sum + toNum(i.qty), 0) || 0), 0);
+      document.getElementById('totalItemsSold').innerText = itemsSold.toFixed(2);
+    }
+
+    // ---------- PRODUCT MASTER ----------
     function renderProductsTable() {
       const tbody = document.getElementById('productsBody');
       tbody.innerHTML = '';
@@ -359,72 +585,61 @@
         let tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${p.code || 'P'+(idx+1)}</td>
-          <td><input value="${p.desc || ''}" data-idx="${idx}" data-field="desc" style="width:120px;"></td>
-          <td><input value="${p.hsn || ''}" data-idx="${idx}" data-field="hsn" style="width:80px;"></td>
+          <td><input value="${p.desc || ''}" data-idx="${idx}" data-field="desc"></td>
+          <td><input value="${p.hsn || ''}" data-idx="${idx}" data-field="hsn"></td>
           <td><select data-idx="${idx}" data-field="metal">${['Gold','Silver','Platinum'].map(m=>`<option ${p.metal===m?'selected':''}>${m}</option>`).join('')}</select></td>
-          <td><input value="${p.purity || '22K'}" data-idx="${idx}" data-field="purity" style="width:70px;"></td>
-          <td><input type="number" step="0.001" value="${p.stock || 0}" data-idx="${idx}" data-field="stock" style="width:90px;"></td>
-          <td><input type="number" step="0.01" value="${p.rate || 0}" data-idx="${idx}" data-field="rate" style="width:90px;"></td>
-          <td><button class="delete-btn" data-delidx="${idx}">❌</button></td>`;
+          <td><input value="${p.purity || '22K'}" data-idx="${idx}" data-field="purity"></td>
+          <td><input type="number" step="0.001" value="${p.stock || 0}" data-idx="${idx}" data-field="stock"></td>
+          <td><input type="number" step="0.01" value="${p.rate || 0}" data-idx="${idx}" data-field="rate"></td>
+          <td><button class="delete-btn" data-delidx="${idx}"><i class="fas fa-trash"></i></button></td>`;
         tbody.appendChild(tr);
       });
       document.querySelectorAll('#productsBody input, #productsBody select').forEach(el => {
-        el.addEventListener('change', function(e) {
+        el.addEventListener('change', function() {
           let idx = this.dataset.idx;
           let field = this.dataset.field;
           if (idx !== undefined) products[idx][field] = this.type==='number' ? toNum(this.value) : this.value;
           saveProducts();
-          renderStockReport(); updateProductDropdowns();
+          renderStockReport();
         });
       });
       document.querySelectorAll('[data-delidx]').forEach(btn => btn.addEventListener('click', e => {
         let idx = btn.dataset.delidx;
-        if(confirm('Delete product?')) { products.splice(idx,1); saveProducts(); renderProductsTable(); renderStockReport(); updateProductDropdowns(); }
+        if(confirm('Delete product?')) { products.splice(idx,1); saveProducts(); renderProductsTable(); renderStockReport(); }
       }));
     }
 
-    document.getElementById('addProductBtn').addEventListener('click', ()=>{
-      products.push({ code:'P'+(products.length+1), desc:'New Item', hsn:'7113', metal:'Gold', purity:'22K', stock:0, rate:5000 });
-      saveProducts(); renderProductsTable(); updateProductDropdowns();
-    });
-
-    // ---------- DROPDOWN POPULATION for purchase/sales ----------
-    function updateProductDropdowns() {
-      // For purchase and sales rows, we'll refresh select options in render
-    }
     function getProductOptionsHtml(selectedVal='') {
       return products.map(p => `<option value="${p.code}" ${selectedVal===p.code?'selected':''}>${p.desc} (${p.metal} ${p.purity})</option>`).join('');
     }
 
     // ---------- PURCHASE MODULE ----------
     let purchaseItems = [];
-    const purchaseTbody = document.getElementById('purchaseRows');
+    
     function renderPurchaseRows() {
-      purchaseTbody.innerHTML = '';
+      const tbody = document.getElementById('purchaseRows');
       if(!purchaseItems.length) {
-        purchaseTbody.innerHTML = '<tr><td colspan="12" style="padding:20px;">Click "Add Item"</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:20px; text-align:center; color:#999;">Click "Add Item" to begin</td></tr>';
         return;
       }
+      tbody.innerHTML = '';
       purchaseItems.forEach((item, i) => {
         let tr = document.createElement('tr');
-        let prodOptions = getProductOptionsHtml(item.productCode);
         tr.innerHTML = `
           <td>${i+1}</td>
-          <td><select data-field="productCode" data-idx="${i}" style="width:130px;">${prodOptions}</select></td>
-          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}" placeholder="HSN"></td>
+          <td><select data-field="productCode" data-idx="${i}">${getProductOptionsHtml(item.productCode)}</select></td>
+          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}"></td>
           <td><input type="number" step="0.001" value="${item.qty || 0}" data-field="qty" data-idx="${i}"></td>
           <td><input type="number" step="0.01" value="${item.rate || 0}" data-field="rate" data-idx="${i}"></td>
           <td>₹${(item.taxable||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.cgstPer||1.5}" data-field="cgstPer" data-idx="${i}"></td>
           <td>₹${(item.cgstAmt||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.sgstPer||1.5}" data-field="sgstPer" data-idx="${i}"></td>
-          <td>₹${(item.sgstAmt||0).toFixed(2)}</td>
           <td>₹${(item.total||0).toFixed(2)}</td>
-          <td><button class="delete-btn" data-delidx="${i}">❌</button></td>`;
-        purchaseTbody.appendChild(tr);
+          <td><button class="delete-btn" data-delidx="${i}"><i class="fas fa-trash"></i></button></td>`;
+        tbody.appendChild(tr);
       });
       attachPurchaseEvents();
-      recalcPurchaseTotals();
     }
 
     function attachPurchaseEvents() {
@@ -458,7 +673,8 @@
         totalTaxable += taxable; cgst += cgstAmt; sgst += sgstAmt; grand += item.total;
       });
       let discount = toNum(document.getElementById('discountAmount').value);
-      let final = grand - discount;
+      let final = Math.max(0, grand - discount);
+      
       document.getElementById('totalTaxableValue').innerText = formatINR(totalTaxable);
       document.getElementById('totalCgstAmount').innerText = formatINR(cgst);
       document.getElementById('totalSgstAmount').innerText = formatINR(sgst);
@@ -468,36 +684,93 @@
       renderPurchaseRows();
     }
 
-    document.getElementById('addPurchaseItemBtn').addEventListener('click', ()=>{
-      purchaseItems.push({ productCode:'', hsn:'', qty:0, rate:0, taxable:0, cgstPer:1.5, sgstPer:1.5 });
-      recalcPurchaseTotals();
-    });
-
-    document.getElementById('savePurchaseBtn').addEventListener('click', ()=>{
-      let party = document.getElementById('partyName').value.trim();
-      if(!party) { alert('Supplier name required'); return; }
-      if(purchaseItems.length===0) { alert('Add items'); return; }
-      // Update stock
-      purchaseItems.forEach(item => {
-        let prod = products.find(p=>p.code === item.productCode);
-        if(prod) prod.stock = toNum(prod.stock) + toNum(item.qty);
-      });
-      saveProducts();
-      let record = {
-        purchaseNo: document.getElementById('purchaseNo').innerText, date: document.getElementById('purchaseDate').innerText,
-        party, items: purchaseItems.map(i=>({...i})), grandTotal: document.getElementById('grandTotalValue').innerText
-      };
-      purchaseList.unshift(record); savePurchases();
-      alert('Purchase saved, stock updated'); renderStockReport(); updateProductDropdowns();
-    });
-
-    // Sales similar
+    // ---------- SALES MODULE ----------
     let salesItems = [];
-    function renderSalesRows() { /* similar */ }
-    // (Due to length, simplified; full logic present)
-    // Implement key functions for brevity but functional.
+    
+    function renderSalesRows() {
+      const tbody = document.getElementById('salesRows');
+      if(!salesItems.length) {
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:20px; text-align:center; color:#999;">Click "Add Item" to begin</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      salesItems.forEach((item, i) => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td><select data-field="productCode" data-idx="${i}">${getProductOptionsHtml(item.productCode)}</select></td>
+          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}"></td>
+          <td><input type="number" step="0.001" value="${item.qty || 0}" data-field="qty" data-idx="${i}"></td>
+          <td><input type="number" step="0.01" value="${item.rate || 0}" data-field="rate" data-idx="${i}"></td>
+          <td>₹${(item.taxable||0).toFixed(2)}</td>
+          <td><input type="number" step="0.1" value="${item.cgstPer||1.5}" data-field="cgstPer" data-idx="${i}"></td>
+          <td>₹${(item.cgstAmt||0).toFixed(2)}</td>
+          <td><input type="number" step="0.1" value="${item.sgstPer||1.5}" data-field="sgstPer" data-idx="${i}"></td>
+          <td>₹${(item.total||0).toFixed(2)}</td>
+          <td><button class="delete-btn" data-delidx="${i}"><i class="fas fa-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+      });
+      attachSalesEvents();
+    }
 
-    // Initialize
+    function attachSalesEvents() {
+      document.querySelectorAll('#salesRows input, #salesRows select').forEach(el => {
+        el.addEventListener('change', function() {
+          let idx = this.dataset.idx;
+          let field = this.dataset.field;
+          if (idx !== undefined) {
+            salesItems[idx][field] = this.type==='number' ? toNum(this.value) : this.value;
+            if (field === 'productCode') {
+              let prod = products.find(p=>p.code === this.value);
+              if(prod) { salesItems[idx].hsn = prod.hsn; salesItems[idx].rate = prod.rate; }
+            }
+            recalcSalesTotals();
+          }
+        });
+      });
+      document.querySelectorAll('[data-delidx]').forEach(btn => btn.addEventListener('click', e => {
+        salesItems.splice(btn.dataset.delidx,1); recalcSalesTotals();
+      }));
+    }
+
+    function recalcSalesTotals() {
+      let totalTaxable=0, cgst=0, sgst=0, grand=0;
+      salesItems.forEach(item => {
+        let qty = toNum(item.qty), rate = toNum(item.rate);
+        let taxable = qty * rate; item.taxable = taxable;
+        let cgstAmt = taxable * toNum(item.cgstPer)/100; item.cgstAmt = cgstAmt;
+        let sgstAmt = taxable * toNum(item.sgstPer)/100; item.sgstAmt = sgstAmt;
+        item.total = taxable + cgstAmt + sgstAmt;
+        totalTaxable += taxable; cgst += cgstAmt; sgst += sgstAmt; grand += item.total;
+      });
+      let discount = toNum(document.getElementById('salesDiscount').value);
+      let final = Math.max(0, grand - discount);
+      
+      document.getElementById('salesTaxable').innerText = formatINR(totalTaxable);
+      document.getElementById('salesCgst').innerText = formatINR(cgst);
+      document.getElementById('salesSgst').innerText = formatINR(sgst);
+      document.getElementById('salesDiscountShow').innerText = formatINR(discount);
+      document.getElementById('salesGrandTotal').innerText = formatINR(final);
+      document.getElementById('salesAmountWords').innerText = numberToWords(final);
+      renderSalesRows();
+    }
+
+    // ---------- STOCK REPORT ----------
+    function renderStockReport() {
+      let tbody = document.getElementById('stockReportBody'); tbody.innerHTML='';
+      let totalVal=0;
+      products.forEach(p => {
+        let val = toNum(p.stock) * toNum(p.rate);
+        totalVal += val;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.desc}</td><td>${p.hsn}</td><td>${p.metal} ${p.purity}</td><td>${toNum(p.stock).toFixed(3)}</td><td>${toNum(p.rate).toFixed(2)}</td><td>₹${val.toFixed(2)}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('totalStockValue').innerText = `Total Inventory Value: ₹${totalVal.toFixed(2)}`;
+      updateAllStats();
+    }
+
+    // ---------- INITIALIZATION ----------
     function init() {
       if(products.length===0) {
         products.push({code:'G22K', desc:'22K Gold Coin', hsn:'7113', metal:'Gold', purity:'22K', stock:50, rate:6200});
@@ -505,36 +778,105 @@
         saveProducts();
       }
       renderProductsTable();
-      updateProductDropdowns();
-      document.getElementById('purchaseDate').innerText = formattedDate();
-      document.getElementById('purchaseNo').innerText = `PUR-${todayCode()}-001`;
-      recalcPurchaseTotals();
       renderStockReport();
+      
+      document.getElementById('purchaseDate').innerText = formattedDate();
+      document.getElementById('salesDate').innerText = formattedDate();
+      document.getElementById('purchaseNo').innerText = `PUR-${todayCode()}-${String(purchaseList.length+1).padStart(3,'0')}`;
+      document.getElementById('salesInvoiceNo').innerText = `INV-${todayCode()}-${String(salesList.length+1).padStart(3,'0')}`;
+      
+      recalcPurchaseTotals();
+      recalcSalesTotals();
     }
 
-    function renderStockReport() {
-      let tbody = document.getElementById('stockReportBody'); tbody.innerHTML='';
-      let totalVal=0;
-      products.forEach(p => {
-        let val = p.stock * p.rate;
-        totalVal += val;
-        let tr = document.createElement('tr');
-        tr.innerHTML = `<td>${p.desc}</td><td>${p.hsn}</td><td>${p.metal} ${p.purity}</td><td>${p.stock.toFixed(3)}</td><td>${p.rate.toFixed(2)}</td><td>₹${val.toFixed(2)}</td>`;
-        tbody.appendChild(tr);
+    // Event Listeners
+    document.getElementById('addPurchaseItemBtn').onclick = () => { purchaseItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); recalcPurchaseTotals(); };
+    document.getElementById('addSalesItemBtn').onclick = () => { salesItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); recalcSalesTotals(); };
+    document.getElementById('addProductBtn').onclick = () => { products.push({ code:'P'+(products.length+1), desc:'New Item', hsn:'7113', metal:'Gold', purity:'22K', stock:0, rate:5000 }); saveProducts(); renderProductsTable(); renderStockReport(); };
+    
+    document.getElementById('savePurchaseBtn').onclick = () => {
+      let party = document.getElementById('partyName').value.trim();
+      if(!party) { alert('Supplier name required'); return; }
+      if(purchaseItems.length===0) { alert('Add items'); return; }
+      
+      purchaseItems.forEach(item => {
+        let prod = products.find(p=>p.code === item.productCode);
+        if(prod) prod.stock = toNum(prod.stock) + toNum(item.qty);
       });
-      document.getElementById('totalStockValue').innerText = `Total Inventory Value: ₹${totalVal.toFixed(2)}`;
-    }
+      saveProducts();
+      
+      let record = {
+        purchaseNo: document.getElementById('purchaseNo').innerText,
+        purchaseDate: document.getElementById('purchaseDate').innerText,
+        partyName: party,
+        partyGstin: document.getElementById('partyGstin').value,
+        billNumber: document.getElementById('billNumber').value,
+        billType: document.getElementById('billType').value,
+        items: purchaseItems.map(i=>({...i})),
+        grandTotal: document.getElementById('grandTotalValue').innerText,
+        amount: toNum(document.getElementById('grandTotalValue').innerText.replace(/[^0-9.-]+/g,''))
+      };
+      purchaseList.unshift(record); savePurchases();
+      showToast('✅ Purchase saved! Stock updated.');
+      purchaseItems = []; 
+      document.getElementById('partyName').value = document.getElementById('partyGstin').value = document.getElementById('billNumber').value = '';
+      document.getElementById('discountAmount').value = '0';
+      document.getElementById('purchaseNo').innerText = `PUR-${todayCode()}-${String(purchaseList.length+1).padStart(3,'0')}`;
+      recalcPurchaseTotals(); renderStockReport();
+    };
 
-    // number to words (simplified)
-    function numberToWords(n) {
-      if(n===0) return 'Zero Rupees Only';
-      return '₹ '+n.toFixed(2)+' (Rupees)';
-    }
+    document.getElementById('saveSalesBtn').onclick = () => {
+      let customer = document.getElementById('customerName').value.trim();
+      if(!customer) { alert('Customer name required'); return; }
+      if(salesItems.length===0) { alert('Add items'); return; }
+      
+      for(let item of salesItems) {
+        let prod = products.find(p=>p.code === item.productCode);
+        if(prod) {
+          if(toNum(prod.stock) < toNum(item.qty)) { alert(`Insufficient stock for ${prod.desc}`); return; }
+          prod.stock = toNum(prod.stock) - toNum(item.qty);
+        }
+      }
+      saveProducts();
+      
+      let record = {
+        invoiceNo: document.getElementById('salesInvoiceNo').innerText,
+        date: document.getElementById('salesDate').innerText,
+        customerName: customer,
+        customerPhone: document.getElementById('customerPhone').value,
+        items: salesItems.map(i=>({...i})),
+        grandTotal: document.getElementById('salesGrandTotal').innerText,
+        amount: toNum(document.getElementById('salesGrandTotal').innerText.replace(/[^0-9.-]+/g,''))
+      };
+      salesList.unshift(record); saveSales();
+      showToast('✅ Sale saved! Stock reduced.');
+      salesItems = [];
+      document.getElementById('customerName').value = document.getElementById('customerPhone').value = '';
+      document.getElementById('salesDiscount').value = '0';
+      document.getElementById('salesInvoiceNo').innerText = `INV-${todayCode()}-${String(salesList.length+1).padStart(3,'0')}`;
+      recalcSalesTotals(); renderStockReport();
+    };
 
-    // Tab switching
-    document.querySelectorAll('.nav-tab').forEach(tab => {
+    document.getElementById('resetPurchaseBtn').onclick = () => { purchaseItems=[]; recalcPurchaseTotals(); };
+    document.getElementById('resetSalesBtn').onclick = () => { salesItems=[]; recalcSalesTotals(); };
+    document.getElementById('printPurchaseBtn').onclick = () => window.print();
+    document.getElementById('printSalesBtn').onclick = () => window.print();
+    document.getElementById('printStockBtn').onclick = () => window.print();
+    document.getElementById('refreshStockBtn').onclick = () => { init(); showToast('🔄 Refreshed'); };
+    document.getElementById('backToDashboardBtn').onclick = () => { window.location.href = 'dashboard.html'; };
+    document.getElementById('exportStockBtn').onclick = () => {
+      let data = { products, purchases: purchaseList, sales: salesList };
+      let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `jp_stock_${todayCode()}.json`;
+      a.click();
+      showToast('✅ Stock data exported!');
+    };
+
+    document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', ()=>{
-        document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
         tab.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
         document.getElementById(tab.dataset.tab).classList.add('active');
@@ -542,11 +884,10 @@
       });
     });
 
-    // Sales module (simplified functional)
-    // For brevity, wire similar logic
+    document.getElementById('discountAmount').onchange = recalcPurchaseTotals;
+    document.getElementById('salesDiscount').onchange = recalcSalesTotals;
+
     init();
-    // Additional sales, print, reset handlers can be extended
-    document.getElementById('resetPurchaseBtn').onclick = ()=>{ purchaseItems=[]; recalcPurchaseTotals(); };
   })();
 </script>
 </body>
