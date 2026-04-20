@@ -72,6 +72,7 @@
     .btn-blue { background: #1e466e; color: white; }
     .btn-gray { background: #6c757d; color: white; }
     .btn-purple { background: #6f42c1; color: white; }
+    .btn-red { background: #dc3545; color: white; }
 
     /* Tabs */
     .tabs {
@@ -203,6 +204,9 @@
       cursor: pointer;
       font-size: 10px;
     }
+    .delete-btn:hover {
+      background: #c82333;
+    }
     .add-btn {
       background: #28a745;
       color: white;
@@ -213,6 +217,9 @@
       font-size: 11px;
       font-weight: bold;
       margin-bottom: 10px;
+    }
+    .add-btn:hover {
+      background: #218838;
     }
 
     /* Totals Grid */
@@ -512,7 +519,7 @@
     let purchaseList = JSON.parse(localStorage.getItem('jp_purchases_list')) || [];
     let salesList = JSON.parse(localStorage.getItem('jp_sales_list')) || [];
 
-    function saveProducts() { localStorage.setItem('jp_products', JSON.stringify(products)); updateAllStats(); }
+    function saveProducts() { localStorage.setItem('jp_products', JSON.stringify(products)); updateAllStats(); renderProductsTable(); renderStockReport(); }
     function savePurchases() { localStorage.setItem('jp_purchases_list', JSON.stringify(purchaseList)); updateAllStats(); }
     function saveSales() { localStorage.setItem('jp_sales_list', JSON.stringify(salesList)); updateAllStats(); }
 
@@ -554,12 +561,12 @@
     function updateAllStats() {
       // Purchase stats
       document.getElementById('purchaseCount').innerText = purchaseList.length;
-      let totalPurchaseVal = purchaseList.reduce((s, p) => s + (toNum(p.grandTotal?.replace(/[^0-9.-]+/g,'')) || 0), 0);
+      let totalPurchaseVal = purchaseList.reduce((s, p) => s + (toNum(p.amount) || 0), 0);
       document.getElementById('purchaseTotalValue').innerHTML = formatINR(totalPurchaseVal);
       
       // Sales stats
       document.getElementById('salesCount').innerText = salesList.length;
-      let totalSalesVal = salesList.reduce((s, sale) => s + (toNum(sale.grandTotal?.replace(/[^0-9.-]+/g,'')) || 0), 0);
+      let totalSalesVal = salesList.reduce((s, sale) => s + (toNum(sale.amount) || 0), 0);
       document.getElementById('salesTotalValue').innerHTML = formatINR(totalSalesVal);
       document.getElementById('avgSaleValue').innerHTML = formatINR(salesList.length ? totalSalesVal / salesList.length : 0);
       
@@ -577,39 +584,67 @@
       document.getElementById('totalItemsSold').innerText = itemsSold.toFixed(2);
     }
 
-    // ---------- PRODUCT MASTER ----------
+    // ---------- PRODUCT MASTER (WITH PERMANENT DELETE) ----------
     function renderProductsTable() {
       const tbody = document.getElementById('productsBody');
       tbody.innerHTML = '';
+      if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:20px; text-align:center; color:#999;">No products found. Click "Add New Product" to start.</td></tr>';
+        return;
+      }
       products.forEach((p, idx) => {
         let tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${p.code || 'P'+(idx+1)}</td>
-          <td><input value="${p.desc || ''}" data-idx="${idx}" data-field="desc"></td>
-          <td><input value="${p.hsn || ''}" data-idx="${idx}" data-field="hsn"></td>
+          <td><input value="${p.code || ''}" data-idx="${idx}" data-field="code" placeholder="Code"></td>
+          <td><input value="${p.desc || ''}" data-idx="${idx}" data-field="desc" placeholder="Description"></td>
+          <td><input value="${p.hsn || ''}" data-idx="${idx}" data-field="hsn" placeholder="HSN"></td>
           <td><select data-idx="${idx}" data-field="metal">${['Gold','Silver','Platinum'].map(m=>`<option ${p.metal===m?'selected':''}>${m}</option>`).join('')}</select></td>
-          <td><input value="${p.purity || '22K'}" data-idx="${idx}" data-field="purity"></td>
+          <td><input value="${p.purity || ''}" data-idx="${idx}" data-field="purity" placeholder="Purity"></td>
           <td><input type="number" step="0.001" value="${p.stock || 0}" data-idx="${idx}" data-field="stock"></td>
           <td><input type="number" step="0.01" value="${p.rate || 0}" data-idx="${idx}" data-field="rate"></td>
-          <td><button class="delete-btn" data-delidx="${idx}"><i class="fas fa-trash"></i></button></td>`;
+          <td><button class="delete-btn" data-delidx="${idx}"><i class="fas fa-trash"></i> Delete</button></td>`;
         tbody.appendChild(tr);
       });
+      
+      // Attach change events for inline editing
       document.querySelectorAll('#productsBody input, #productsBody select').forEach(el => {
-        el.addEventListener('change', function() {
-          let idx = this.dataset.idx;
-          let field = this.dataset.field;
-          if (idx !== undefined) products[idx][field] = this.type==='number' ? toNum(this.value) : this.value;
-          saveProducts();
-          renderStockReport();
-        });
+        el.removeEventListener('change', handleProductChange);
+        el.addEventListener('change', handleProductChange);
       });
-      document.querySelectorAll('[data-delidx]').forEach(btn => btn.addEventListener('click', e => {
-        let idx = btn.dataset.delidx;
-        if(confirm('Delete product?')) { products.splice(idx,1); saveProducts(); renderProductsTable(); renderStockReport(); }
-      }));
+      
+      // Attach delete events
+      document.querySelectorAll('#productsBody [data-delidx]').forEach(btn => {
+        btn.removeEventListener('click', handleProductDelete);
+        btn.addEventListener('click', handleProductDelete);
+      });
+    }
+    
+    function handleProductChange(e) {
+      let idx = e.target.dataset.idx;
+      let field = e.target.dataset.field;
+      if (idx !== undefined && field) {
+        let value = e.target.type === 'number' ? toNum(e.target.value) : e.target.value;
+        products[idx][field] = value;
+        saveProducts();
+        showToast(`✅ Product ${field} updated`);
+      }
+    }
+    
+    function handleProductDelete(e) {
+      let idx = e.currentTarget.dataset.delidx;
+      if (confirm('⚠️ Delete this product permanently? This will affect all purchase/sales records.')) {
+        products.splice(idx, 1);
+        saveProducts();
+        renderProductsTable();
+        renderStockReport();
+        showToast('🗑️ Product deleted permanently');
+      }
     }
 
     function getProductOptionsHtml(selectedVal='') {
+      if (products.length === 0) {
+        return '<option value="">No products available</option>';
+      }
       return products.map(p => `<option value="${p.code}" ${selectedVal===p.code?'selected':''}>${p.desc} (${p.metal} ${p.purity})</option>`).join('');
     }
 
@@ -628,13 +663,14 @@
         tr.innerHTML = `
           <td>${i+1}</td>
           <td><select data-field="productCode" data-idx="${i}">${getProductOptionsHtml(item.productCode)}</select></td>
-          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}"></td>
+          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}" placeholder="HSN"></td>
           <td><input type="number" step="0.001" value="${item.qty || 0}" data-field="qty" data-idx="${i}"></td>
           <td><input type="number" step="0.01" value="${item.rate || 0}" data-field="rate" data-idx="${i}"></td>
           <td>₹${(item.taxable||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.cgstPer||1.5}" data-field="cgstPer" data-idx="${i}"></td>
           <td>₹${(item.cgstAmt||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.sgstPer||1.5}" data-field="sgstPer" data-idx="${i}"></td>
+          <td>₹${(item.sgstAmt||0).toFixed(2)}</td>
           <td>₹${(item.total||0).toFixed(2)}</td>
           <td><button class="delete-btn" data-delidx="${i}"><i class="fas fa-trash"></i></button></td>`;
         tbody.appendChild(tr);
@@ -644,22 +680,35 @@
 
     function attachPurchaseEvents() {
       document.querySelectorAll('#purchaseRows input, #purchaseRows select').forEach(el => {
-        el.addEventListener('change', function() {
-          let idx = this.dataset.idx;
-          let field = this.dataset.field;
-          if (idx !== undefined) {
-            purchaseItems[idx][field] = this.type==='number' ? toNum(this.value) : this.value;
-            if (field === 'productCode') {
-              let prod = products.find(p=>p.code === this.value);
-              if(prod) { purchaseItems[idx].hsn = prod.hsn; purchaseItems[idx].rate = prod.rate; }
-            }
-            recalcPurchaseTotals();
-          }
-        });
+        el.removeEventListener('change', handlePurchaseChange);
+        el.addEventListener('change', handlePurchaseChange);
       });
-      document.querySelectorAll('[data-delidx]').forEach(btn => btn.addEventListener('click', e => {
-        purchaseItems.splice(btn.dataset.delidx,1); recalcPurchaseTotals();
-      }));
+      document.querySelectorAll('#purchaseRows [data-delidx]').forEach(btn => {
+        btn.removeEventListener('click', handlePurchaseDelete);
+        btn.addEventListener('click', handlePurchaseDelete);
+      });
+    }
+    
+    function handlePurchaseChange(e) {
+      let idx = e.target.dataset.idx;
+      let field = e.target.dataset.field;
+      if (idx !== undefined && field) {
+        purchaseItems[idx][field] = e.target.type === 'number' ? toNum(e.target.value) : e.target.value;
+        if (field === 'productCode') {
+          let prod = products.find(p=>p.code === e.target.value);
+          if(prod) { 
+            purchaseItems[idx].hsn = prod.hsn; 
+            purchaseItems[idx].rate = prod.rate;
+          }
+        }
+        recalcPurchaseTotals();
+      }
+    }
+    
+    function handlePurchaseDelete(e) {
+      let idx = e.currentTarget.dataset.delidx;
+      purchaseItems.splice(idx, 1);
+      recalcPurchaseTotals();
     }
 
     function recalcPurchaseTotals() {
@@ -675,11 +724,11 @@
       let discount = toNum(document.getElementById('discountAmount').value);
       let final = Math.max(0, grand - discount);
       
-      document.getElementById('totalTaxableValue').innerText = formatINR(totalTaxable);
-      document.getElementById('totalCgstAmount').innerText = formatINR(cgst);
-      document.getElementById('totalSgstAmount').innerText = formatINR(sgst);
-      document.getElementById('discountShow').innerText = formatINR(discount);
-      document.getElementById('grandTotalValue').innerText = formatINR(final);
+      document.getElementById('totalTaxableValue').innerHTML = formatINR(totalTaxable);
+      document.getElementById('totalCgstAmount').innerHTML = formatINR(cgst);
+      document.getElementById('totalSgstAmount').innerHTML = formatINR(sgst);
+      document.getElementById('discountShow').innerHTML = formatINR(discount);
+      document.getElementById('grandTotalValue').innerHTML = formatINR(final);
       document.getElementById('amountWords').innerText = numberToWords(final);
       renderPurchaseRows();
     }
@@ -699,13 +748,14 @@
         tr.innerHTML = `
           <td>${i+1}</td>
           <td><select data-field="productCode" data-idx="${i}">${getProductOptionsHtml(item.productCode)}</select></td>
-          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}"></td>
+          <td><input value="${item.hsn || ''}" data-field="hsn" data-idx="${i}" placeholder="HSN"></td>
           <td><input type="number" step="0.001" value="${item.qty || 0}" data-field="qty" data-idx="${i}"></td>
           <td><input type="number" step="0.01" value="${item.rate || 0}" data-field="rate" data-idx="${i}"></td>
           <td>₹${(item.taxable||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.cgstPer||1.5}" data-field="cgstPer" data-idx="${i}"></td>
           <td>₹${(item.cgstAmt||0).toFixed(2)}</td>
           <td><input type="number" step="0.1" value="${item.sgstPer||1.5}" data-field="sgstPer" data-idx="${i}"></td>
+          <td>₹${(item.sgstAmt||0).toFixed(2)}</td>
           <td>₹${(item.total||0).toFixed(2)}</td>
           <td><button class="delete-btn" data-delidx="${i}"><i class="fas fa-trash"></i></button></td>`;
         tbody.appendChild(tr);
@@ -715,22 +765,35 @@
 
     function attachSalesEvents() {
       document.querySelectorAll('#salesRows input, #salesRows select').forEach(el => {
-        el.addEventListener('change', function() {
-          let idx = this.dataset.idx;
-          let field = this.dataset.field;
-          if (idx !== undefined) {
-            salesItems[idx][field] = this.type==='number' ? toNum(this.value) : this.value;
-            if (field === 'productCode') {
-              let prod = products.find(p=>p.code === this.value);
-              if(prod) { salesItems[idx].hsn = prod.hsn; salesItems[idx].rate = prod.rate; }
-            }
-            recalcSalesTotals();
-          }
-        });
+        el.removeEventListener('change', handleSalesChange);
+        el.addEventListener('change', handleSalesChange);
       });
-      document.querySelectorAll('[data-delidx]').forEach(btn => btn.addEventListener('click', e => {
-        salesItems.splice(btn.dataset.delidx,1); recalcSalesTotals();
-      }));
+      document.querySelectorAll('#salesRows [data-delidx]').forEach(btn => {
+        btn.removeEventListener('click', handleSalesDelete);
+        btn.addEventListener('click', handleSalesDelete);
+      });
+    }
+    
+    function handleSalesChange(e) {
+      let idx = e.target.dataset.idx;
+      let field = e.target.dataset.field;
+      if (idx !== undefined && field) {
+        salesItems[idx][field] = e.target.type === 'number' ? toNum(e.target.value) : e.target.value;
+        if (field === 'productCode') {
+          let prod = products.find(p=>p.code === e.target.value);
+          if(prod) { 
+            salesItems[idx].hsn = prod.hsn; 
+            salesItems[idx].rate = prod.rate;
+          }
+        }
+        recalcSalesTotals();
+      }
+    }
+    
+    function handleSalesDelete(e) {
+      let idx = e.currentTarget.dataset.delidx;
+      salesItems.splice(idx, 1);
+      recalcSalesTotals();
     }
 
     function recalcSalesTotals() {
@@ -746,37 +809,39 @@
       let discount = toNum(document.getElementById('salesDiscount').value);
       let final = Math.max(0, grand - discount);
       
-      document.getElementById('salesTaxable').innerText = formatINR(totalTaxable);
-      document.getElementById('salesCgst').innerText = formatINR(cgst);
-      document.getElementById('salesSgst').innerText = formatINR(sgst);
-      document.getElementById('salesDiscountShow').innerText = formatINR(discount);
-      document.getElementById('salesGrandTotal').innerText = formatINR(final);
+      document.getElementById('salesTaxable').innerHTML = formatINR(totalTaxable);
+      document.getElementById('salesCgst').innerHTML = formatINR(cgst);
+      document.getElementById('salesSgst').innerHTML = formatINR(sgst);
+      document.getElementById('salesDiscountShow').innerHTML = formatINR(discount);
+      document.getElementById('salesGrandTotal').innerHTML = formatINR(final);
       document.getElementById('salesAmountWords').innerText = numberToWords(final);
       renderSalesRows();
     }
 
     // ---------- STOCK REPORT ----------
     function renderStockReport() {
-      let tbody = document.getElementById('stockReportBody'); tbody.innerHTML='';
+      let tbody = document.getElementById('stockReportBody'); 
+      tbody.innerHTML='';
+      if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">No products available</td></tr>';
+        document.getElementById('totalStockValue').innerText = 'Total Inventory Value: ₹0';
+        return;
+      }
       let totalVal=0;
       products.forEach(p => {
         let val = toNum(p.stock) * toNum(p.rate);
         totalVal += val;
         let tr = document.createElement('tr');
-        tr.innerHTML = `<td>${p.desc}</td><td>${p.hsn}</td><td>${p.metal} ${p.purity}</td><td>${toNum(p.stock).toFixed(3)}</td><td>${toNum(p.rate).toFixed(2)}</td><td>₹${val.toFixed(2)}</td>`;
+        tr.innerHTML = `<td>${p.desc || p.code}</td><td>${p.hsn || '-'}</td><td>${p.metal || '-'} ${p.purity || '-'}</td><td>${toNum(p.stock).toFixed(3)} g</td><td>₹${toNum(p.rate).toFixed(2)}</td><td>₹${val.toFixed(2)}</td>`;
         tbody.appendChild(tr);
       });
-      document.getElementById('totalStockValue').innerText = `Total Inventory Value: ₹${totalVal.toFixed(2)}`;
+      document.getElementById('totalStockValue').innerHTML = `Total Inventory Value: ₹${totalVal.toFixed(2)}`;
       updateAllStats();
     }
 
-    // ---------- INITIALIZATION ----------
+    // ---------- INITIALIZATION (NO DEFAULT PRODUCTS) ----------
     function init() {
-      if(products.length===0) {
-        products.push({code:'G22K', desc:'22K Gold Coin', hsn:'7113', metal:'Gold', purity:'22K', stock:50, rate:6200});
-        products.push({code:'SIL1', desc:'Silver Bar', hsn:'7106', metal:'Silver', purity:'999', stock:2000, rate:85});
-        saveProducts();
-      }
+      // NO default products - start empty
       renderProductsTable();
       renderStockReport();
       
@@ -790,14 +855,54 @@
     }
 
     // Event Listeners
-    document.getElementById('addPurchaseItemBtn').onclick = () => { purchaseItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); recalcPurchaseTotals(); };
-    document.getElementById('addSalesItemBtn').onclick = () => { salesItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); recalcSalesTotals(); };
-    document.getElementById('addProductBtn').onclick = () => { products.push({ code:'P'+(products.length+1), desc:'New Item', hsn:'7113', metal:'Gold', purity:'22K', stock:0, rate:5000 }); saveProducts(); renderProductsTable(); renderStockReport(); };
+    document.getElementById('addPurchaseItemBtn').onclick = () => { 
+      if (products.length === 0) {
+        alert('Please add products in Product Master first!');
+        return;
+      }
+      purchaseItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); 
+      recalcPurchaseTotals(); 
+    };
+    
+    document.getElementById('addSalesItemBtn').onclick = () => { 
+      if (products.length === 0) {
+        alert('Please add products in Product Master first!');
+        return;
+      }
+      salesItems.push({ productCode:'', qty:0, rate:0, cgstPer:1.5, sgstPer:1.5 }); 
+      recalcSalesTotals(); 
+    };
+    
+    document.getElementById('addProductBtn').onclick = () => { 
+      let newCode = 'P' + (products.length + 1);
+      products.push({ 
+        code: newCode, 
+        desc: 'New Product', 
+        hsn: '7113', 
+        metal: 'Gold', 
+        purity: '22K', 
+        stock: 0, 
+        rate: 0 
+      }); 
+      saveProducts(); 
+      renderProductsTable(); 
+      renderStockReport(); 
+      showToast('✅ New product added');
+    };
     
     document.getElementById('savePurchaseBtn').onclick = () => {
       let party = document.getElementById('partyName').value.trim();
       if(!party) { alert('Supplier name required'); return; }
       if(purchaseItems.length===0) { alert('Add items'); return; }
+      if(products.length === 0) { alert('No products in master. Please add products first.'); return; }
+      
+      // Check if all items have valid product codes
+      for(let item of purchaseItems) {
+        if(!item.productCode) {
+          alert('Please select a product for each item');
+          return;
+        }
+      }
       
       purchaseItems.forEach(item => {
         let prod = products.find(p=>p.code === item.productCode);
@@ -813,27 +918,41 @@
         billNumber: document.getElementById('billNumber').value,
         billType: document.getElementById('billType').value,
         items: purchaseItems.map(i=>({...i})),
-        grandTotal: document.getElementById('grandTotalValue').innerText,
         amount: toNum(document.getElementById('grandTotalValue').innerText.replace(/[^0-9.-]+/g,''))
       };
       purchaseList.unshift(record); savePurchases();
       showToast('✅ Purchase saved! Stock updated.');
       purchaseItems = []; 
-      document.getElementById('partyName').value = document.getElementById('partyGstin').value = document.getElementById('billNumber').value = '';
+      document.getElementById('partyName').value = '';
+      document.getElementById('partyGstin').value = '';
+      document.getElementById('billNumber').value = '';
       document.getElementById('discountAmount').value = '0';
       document.getElementById('purchaseNo').innerText = `PUR-${todayCode()}-${String(purchaseList.length+1).padStart(3,'0')}`;
-      recalcPurchaseTotals(); renderStockReport();
+      recalcPurchaseTotals(); 
+      renderStockReport();
     };
 
     document.getElementById('saveSalesBtn').onclick = () => {
       let customer = document.getElementById('customerName').value.trim();
       if(!customer) { alert('Customer name required'); return; }
       if(salesItems.length===0) { alert('Add items'); return; }
+      if(products.length === 0) { alert('No products in master. Please add products first.'); return; }
+      
+      for(let item of salesItems) {
+        let prod = products.find(p=>p.code === item.productCode);
+        if(!prod) {
+          alert(`Product not found for selected item`);
+          return;
+        }
+        if(toNum(prod.stock) < toNum(item.qty)) { 
+          alert(`Insufficient stock for ${prod.desc}. Available: ${prod.stock}g`); 
+          return; 
+        }
+      }
       
       for(let item of salesItems) {
         let prod = products.find(p=>p.code === item.productCode);
         if(prod) {
-          if(toNum(prod.stock) < toNum(item.qty)) { alert(`Insufficient stock for ${prod.desc}`); return; }
           prod.stock = toNum(prod.stock) - toNum(item.qty);
         }
       }
@@ -845,25 +964,38 @@
         customerName: customer,
         customerPhone: document.getElementById('customerPhone').value,
         items: salesItems.map(i=>({...i})),
-        grandTotal: document.getElementById('salesGrandTotal').innerText,
         amount: toNum(document.getElementById('salesGrandTotal').innerText.replace(/[^0-9.-]+/g,''))
       };
       salesList.unshift(record); saveSales();
       showToast('✅ Sale saved! Stock reduced.');
       salesItems = [];
-      document.getElementById('customerName').value = document.getElementById('customerPhone').value = '';
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
       document.getElementById('salesDiscount').value = '0';
       document.getElementById('salesInvoiceNo').innerText = `INV-${todayCode()}-${String(salesList.length+1).padStart(3,'0')}`;
-      recalcSalesTotals(); renderStockReport();
+      recalcSalesTotals(); 
+      renderStockReport();
     };
 
-    document.getElementById('resetPurchaseBtn').onclick = () => { purchaseItems=[]; recalcPurchaseTotals(); };
-    document.getElementById('resetSalesBtn').onclick = () => { salesItems=[]; recalcSalesTotals(); };
+    document.getElementById('resetPurchaseBtn').onclick = () => { 
+      if(confirm('Reset all purchase items?')) {
+        purchaseItems=[]; 
+        recalcPurchaseTotals();
+      }
+    };
+    
+    document.getElementById('resetSalesBtn').onclick = () => { 
+      if(confirm('Reset all sales items?')) {
+        salesItems=[]; 
+        recalcSalesTotals();
+      }
+    };
+    
     document.getElementById('printPurchaseBtn').onclick = () => window.print();
     document.getElementById('printSalesBtn').onclick = () => window.print();
     document.getElementById('printStockBtn').onclick = () => window.print();
     document.getElementById('refreshStockBtn').onclick = () => { init(); showToast('🔄 Refreshed'); };
-    document.getElementById('backToDashboardBtn').onclick = () => { window.location.href = 'dashboard.html'; };
+    document.getElementById('backToDashboardBtn').onclick = () => { window.location.href = 'index.html'; };
     document.getElementById('exportStockBtn').onclick = () => {
       let data = { products, purchases: purchaseList, sales: salesList };
       let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
