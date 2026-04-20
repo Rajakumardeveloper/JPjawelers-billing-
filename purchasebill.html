@@ -439,30 +439,29 @@
 
     function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
 
-    function getTodayDateCode() {
-        let now = new Date();
-        let y = now.getFullYear();
-        let m = String(now.getMonth()+1).padStart(2,'0');
-        let d = String(now.getDate()).padStart(2,'0');
-        return `\( {y} \){m}${d}`;
-    }
+function getTodayDateCode() {
+    let now = new Date();
+    let y = now.getFullYear();
+    let m = String(now.getMonth()+1).padStart(2,'0');
+    let d = String(now.getDate()).padStart(2,'0');
+    return `${y}${m}${d}`;  // Fixed: removed backslashes
+}
 
-    function getFormattedDate() {
-        let now = new Date();
-        let d = String(now.getDate()).padStart(2,'0');
-        let m = String(now.getMonth()+1).padStart(2,'0');
-        let y = now.getFullYear();
-        return `\( {d}/ \){m}/${y}`;
-    }
+function getFormattedDate() {
+    let now = new Date();
+    let d = String(now.getDate()).padStart(2,'0');
+    let m = String(now.getMonth()+1).padStart(2,'0');
+    let y = now.getFullYear();
+    return `${d}/${m}/${y}`;  // Fixed: removed backslashes
+}
 
     function getNextPurchaseNumber() {
-        let todayCode = getTodayDateCode();
-        let existingPurchases = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
-        let todayPurchases = existingPurchases.filter(p => p.purchaseNo && p.purchaseNo.startsWith(`PUR-${todayCode}`));
-        let nextNumber = todayPurchases.length + 1;
-        return `PUR-\( {todayCode}- \){String(nextNumber).padStart(3,'0')}`;
-    }
-
+    let todayCode = getTodayDateCode();
+    let existingPurchases = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
+    let todayPurchases = existingPurchases.filter(p => p.purchaseNo && p.purchaseNo.startsWith(`PUR-${todayCode}`));
+    let nextNumber = todayPurchases.length + 1;
+    return `PUR-${todayCode}-${String(nextNumber).padStart(3,'0')}`;  // Fixed: removed backslashes
+}
     function updatePurchaseNumber() {
         purchaseNoSpan.innerText = getNextPurchaseNumber();
     }
