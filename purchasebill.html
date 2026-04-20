@@ -319,25 +319,56 @@
                     <select id="yearSelect" style="width:48%;"><option>2023</option><option>2024</option><option>2025</option><option selected>2026</option></select>
                 </div></div>
             </div>
+            
+            <!-- Purchase Details with Intra/Inter -->
             <div class="meta-box">
                 <div class="meta-title">Purchase Details</div>
-                <div class="meta-row"><div class="meta-label">Bill Type</div><div class="meta-value">
-                    <select id="billType"><option>GST Purchase</option><option>Non-GST Purchase</option><option>Cash Purchase</option></select>
-                </div></div>
-                <div class="meta-row"><div class="meta-label">Discount (₹)</div><div class="meta-value"><input type="number" id="discountAmount" value="0" step="1"></div></div>
+                
+                <div class="meta-row">
+                    <div class="meta-label">Bill Type</div>
+                    <div class="meta-value">
+                        <select id="billType">
+                            <option>GST Purchase</option>
+                            <option>Non-GST Purchase</option>
+                            <option>Cash Purchase</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="meta-row">
+                    <div class="meta-label">Nature of Supply</div>
+                    <div class="meta-value">
+                        <select id="supplyType" style="width:100%; margin-bottom:5px;">
+                            <option value="intra" selected>Intra-State</option>
+                            <option value="inter">Inter-State</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="meta-row">
+                    <div class="meta-label">State</div>
+                    <div class="meta-value">
+                        <span id="intraStateDisplay" style="display:block; font-weight:600; color:#1e466e; padding:4px 0;">
+                            Uttar Pradesh
+                        </span>
+                        <select id="stateSelect" style="width:100%; display:none;">
+                            <!-- States populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="meta-row">
+                    <div class="meta-label">Discount (₹)</div>
+                    <div class="meta-value">
+                        <input type="number" id="discountAmount" value="0" step="1">
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="items-wrapper">
             <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>SL</th><th>HSN / ITEM DESCRIPTION</th><th>QTY</th><th>RATE</th>
-                        <th>TAXABLE VALUE</th><th>CGST%</th><th>CGST AMT</th>
-                        <th>SGST%</th><th>SGST AMT</th><th>TOTAL TAX</th>
-                        <th>ADD/OTHER CHARGES</th><th>TOTAL BILL VALUE</th><th>ACTION</th>
-                    </tr>
-                </thead>
+                <thead id="itemsHeader"></thead>
                 <tbody id="purchaseRows"></tbody>
             </table>
         </div>
@@ -386,9 +417,10 @@
 
 <script>
     let purchaseItems = [];
-    let purchaseCounter = 1;
+    let isIntraState = true;   // ← New: tracks current Intra/Inter mode
 
     const tbody = document.getElementById('purchaseRows');
+    const itemsHeader = document.getElementById('itemsHeader');
     const addBtn = document.getElementById('addItemBtn');
     const saveBtn = document.getElementById('savePurchaseBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -407,36 +439,28 @@
 
     function toNumber(val, def=0) { let n = parseFloat(val); return isNaN(n) ? def : n; }
 
-    // Get today's date in YYYYMMDD format
     function getTodayDateCode() {
         let now = new Date();
         let y = now.getFullYear();
         let m = String(now.getMonth()+1).padStart(2,'0');
         let d = String(now.getDate()).padStart(2,'0');
-        return `${y}${m}${d}`;
+        return `\( {y} \){m}${d}`;
     }
 
-    // Get formatted date for display
     function getFormattedDate() {
         let now = new Date();
         let d = String(now.getDate()).padStart(2,'0');
         let m = String(now.getMonth()+1).padStart(2,'0');
         let y = now.getFullYear();
-        return `${d}/${m}/${y}`;
+        return `\( {d}/ \){m}/${y}`;
     }
 
-    // Get next purchase number for today's date
     function getNextPurchaseNumber() {
         let todayCode = getTodayDateCode();
         let existingPurchases = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
-        
-        // Filter purchases made today
-        let todayPurchases = existingPurchases.filter(p => {
-            return p.purchaseNo && p.purchaseNo.startsWith(`PUR-${todayCode}`);
-        });
-        
+        let todayPurchases = existingPurchases.filter(p => p.purchaseNo && p.purchaseNo.startsWith(`PUR-${todayCode}`));
         let nextNumber = todayPurchases.length + 1;
-        return `PUR-${todayCode}-${String(nextNumber).padStart(3,'0')}`;
+        return `PUR-\( {todayCode}- \){String(nextNumber).padStart(3,'0')}`;
     }
 
     function updatePurchaseNumber() {
@@ -448,46 +472,132 @@
         updatePurchaseNumber();
     }
 
+    // ==================== NEW: INTRA / INTER LOGIC ====================
+    const indianStates = [
+        "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat",
+        "Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh",
+        "Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab",
+        "Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh",
+        "Uttarakhand","West Bengal","Andaman and Nicobar Islands","Chandigarh",
+        "Dadra and Nagar Haveli and Daman and Diu","Delhi","Jammu and Kashmir",
+        "Ladakh","Lakshadweep","Puducherry"
+    ];
+
+    function populateStates() {
+        const select = document.getElementById('stateSelect');
+        select.innerHTML = '<option value="">-- Select State --</option>';
+        indianStates.forEach(state => {
+            const opt = document.createElement('option');
+            opt.value = state;
+            opt.textContent = state;
+            select.appendChild(opt);
+        });
+    }
+
+    function syncTaxPercentages() {
+        for (let item of purchaseItems) {
+            if (isIntraState) {
+                // Inter → Intra: convert IGST to CGST + SGST (half each)
+                if ((item.igstPercent || 0) > 0 && (item.cgstPercent || 0) === 0 && (item.sgstPercent || 0) === 0) {
+                    const half = (item.igstPercent || 0) / 2;
+                    item.cgstPercent = half;
+                    item.sgstPercent = half;
+                }
+            } else {
+                // Intra → Inter: convert CGST + SGST to IGST
+                const totalGst = (item.cgstPercent || 0) + (item.sgstPercent || 0);
+                if (totalGst > 0) {
+                    item.igstPercent = totalGst;
+                }
+            }
+        }
+    }
+
+    function handleSupplyTypeChange() {
+        const type = document.getElementById('supplyType').value;
+        isIntraState = (type === "intra");
+
+        const intraDisplay = document.getElementById('intraStateDisplay');
+        const stateSelect = document.getElementById('stateSelect');
+
+        if (isIntraState) {
+            intraDisplay.style.display = "block";
+            stateSelect.style.display = "none";
+        } else {
+            intraDisplay.style.display = "none";
+            stateSelect.style.display = "block";
+        }
+
+        syncTaxPercentages();   // Auto-adjust tax % when switching
+        recalcAll();            // Re-calculate + re-render table with correct columns
+    }
+
+    function initSupplyType() {
+        populateStates();
+        const supplySelect = document.getElementById('supplyType');
+        supplySelect.onchange = handleSupplyTypeChange;
+        handleSupplyTypeChange(); // Initial setup
+    }
+    // ==================== END OF INTRA/INTER LOGIC ====================
+
     function calculateRow(row) {
         let qty = toNumber(row.qty);
         let rate = toNumber(row.rate);
         let taxable = qty * rate;
         row.taxableValue = taxable;
-        
-        let cgstPercent = toNumber(row.cgstPercent);
-        let sgstPercent = toNumber(row.sgstPercent);
-        let cgstAmount = taxable * (cgstPercent / 100);
-        let sgstAmount = taxable * (sgstPercent / 100);
-        row.cgstAmount = cgstAmount;
-        row.sgstAmount = sgstAmount;
-        
-        let totalTax = cgstAmount + sgstAmount;
+
+        let totalTax = 0;
+
+        if (isIntraState) {
+            let cgstP = toNumber(row.cgstPercent);
+            let sgstP = toNumber(row.sgstPercent);
+            row.cgstAmount = taxable * (cgstP / 100);
+            row.sgstAmount = taxable * (sgstP / 100);
+            row.igstAmount = 0;
+            totalTax = row.cgstAmount + row.sgstAmount;
+        } else {
+            let igstP = toNumber(row.igstPercent);
+            row.igstAmount = taxable * (igstP / 100);
+            row.cgstAmount = 0;
+            row.sgstAmount = 0;
+            totalTax = row.igstAmount;
+        }
+
         row.totalTax = totalTax;
-        
         let addCharges = toNumber(row.addCharges);
-        let totalBill = taxable + totalTax + addCharges;
-        row.totalBillValue = totalBill;
-        
-        return { taxable, cgstAmount, sgstAmount, totalTax, totalBill };
+        row.totalBillValue = taxable + totalTax + addCharges;
+
+        return {
+            taxable,
+            cgstAmount: row.cgstAmount || 0,
+            sgstAmount: row.sgstAmount || 0,
+            igstAmount: row.igstAmount || 0,
+            totalTax,
+            totalBill: row.totalBillValue
+        };
     }
 
     function recalcAll() {
-        let totalTaxable = 0, totalCgst = 0, totalSgst = 0, totalTaxSum = 0, totalAdd = 0, totalGrand = 0;
-        
-        for(let i=0; i<purchaseItems.length; i++) {
+        let totalTaxable = 0, totalCgst = 0, totalSgst = 0, totalIgst = 0, totalTaxSum = 0, totalAdd = 0, totalGrand = 0;
+
+        for (let i = 0; i < purchaseItems.length; i++) {
             let result = calculateRow(purchaseItems[i]);
             totalTaxable += result.taxable;
-            totalCgst += result.cgstAmount;
-            totalSgst += result.sgstAmount;
+            if (isIntraState) {
+                totalCgst += result.cgstAmount;
+                totalSgst += result.sgstAmount;
+            } else {
+                totalIgst += result.igstAmount;
+            }
             totalTaxSum += result.totalTax;
             totalAdd += toNumber(purchaseItems[i].addCharges);
             totalGrand += result.totalBill;
         }
-        
+
         let discount = toNumber(discountInput.value);
         let finalGrand = totalGrand - discount;
-        if(finalGrand < 0) finalGrand = 0;
-        
+        if (finalGrand < 0) finalGrand = 0;
+
         totalTaxableSpan.innerText = `₹${totalTaxable.toFixed(2)}`;
         totalCgstSpan.innerText = `₹${totalCgst.toFixed(2)}`;
         totalSgstSpan.innerText = `₹${totalSgst.toFixed(2)}`;
@@ -496,29 +606,29 @@
         discountShowSpan.innerText = `₹${discount.toFixed(2)}`;
         grandTotalSpan.innerText = `₹${finalGrand.toFixed(2)}`;
         amountWordsSpan.innerText = convertToIndianWords(Math.abs(finalGrand));
-        
-        renderTableRows();
+
+        renderTable();   // ← Now dynamic columns
     }
 
     function convertToIndianWords(num) {
-        if(num === 0) return "Zero Rupees Only";
+        if (num === 0) return "Zero Rupees Only";
         let rupees = Math.floor(num);
         let paise = Math.round((num - rupees) * 100);
         let words = convertNumberToIndian(rupees) + " Rupees";
-        if(paise > 0) words += " and " + convertNumberToIndian(paise) + " Paise";
+        if (paise > 0) words += " and " + convertNumberToIndian(paise) + " Paise";
         return words + " Only";
     }
-    
+
     function convertNumberToIndian(n) {
-        if(n === 0) return "";
+        if (n === 0) return "";
         const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
         const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
         function underHundred(num) {
-            if(num < 20) return units[num];
+            if (num < 20) return units[num];
             return tens[Math.floor(num/10)] + (num%10 ? " " + units[num%10] : "");
         }
         function convert(num) {
-            if(num === 0) return "";
+            if (num === 0) return "";
             let crore = Math.floor(num/10000000);
             let lakhRem = num % 10000000;
             let lakh = Math.floor(lakhRem/100000);
@@ -528,22 +638,45 @@
             let hundred = Math.floor(hundredRem/100);
             let rest = hundredRem % 100;
             let result = "";
-            if(crore) result += convert(crore) + " Crore ";
-            if(lakh) result += convert(lakh) + " Lakh ";
-            if(thousand) result += convert(thousand) + " Thousand ";
-            if(hundred) result += units[hundred] + " Hundred ";
-            if(rest) result += underHundred(rest);
+            if (crore) result += convert(crore) + " Crore ";
+            if (lakh) result += convert(lakh) + " Lakh ";
+            if (thousand) result += convert(thousand) + " Thousand ";
+            if (hundred) result += units[hundred] + " Hundred ";
+            if (rest) result += underHundred(rest);
             return result.trim();
         }
         return convert(n);
     }
 
-    function renderTableRows() {
+    // Dynamic Header
+    function renderHeader() {
+        const taxHeader = isIntraState 
+            ? `<th>CGST%</th><th>CGST AMT</th><th>SGST%</th><th>SGST AMT</th>` 
+            : `<th>IGST%</th><th>IGST AMT</th>`;
+
+        itemsHeader.innerHTML = `
+            <tr>
+                <th>SL</th>
+                <th>HSN / ITEM DESCRIPTION</th>
+                <th>QTY</th>
+                <th>RATE</th>
+                <th>TAXABLE VALUE</th>
+                ${taxHeader}
+                <th>TOTAL TAX</th>
+                <th>ADD/OTHER CHARGES</th>
+                <th>TOTAL BILL VALUE</th>
+                <th>ACTION</th>
+            </tr>
+        `;
+    }
+
+    // Dynamic Body (replaces old renderTableRows)
+    function renderTableBody() {
         tbody.innerHTML = '';
-        if(purchaseItems.length === 0) {
+        if (purchaseItems.length === 0) {
             let tr = document.createElement('tr');
             let td = document.createElement('td');
-            td.colSpan = 13;
+            td.colSpan = isIntraState ? 13 : 11;   // 13 cols for Intra, 11 for Inter
             td.style.textAlign = 'center';
             td.style.padding = '20px';
             td.style.color = '#adb5bd';
@@ -552,17 +685,17 @@
             tbody.appendChild(tr);
             return;
         }
-        
-        for(let idx=0; idx<purchaseItems.length; idx++) {
+
+        for (let idx = 0; idx < purchaseItems.length; idx++) {
             let row = purchaseItems[idx];
             let tr = document.createElement('tr');
-            
-            // SL No
+
+            // SL
             let tdSl = document.createElement('td');
-            tdSl.innerText = idx+1;
+            tdSl.innerText = idx + 1;
             tr.appendChild(tdSl);
-            
-            // HSN / Item Description
+
+            // HSN / Description
             let tdDesc = document.createElement('td');
             let descInput = document.createElement('input');
             descInput.type = 'text';
@@ -572,7 +705,7 @@
             descInput.onchange = (function(r) { return function(e) { r.itemDesc = e.target.value; recalcAll(); }; })(row);
             tdDesc.appendChild(descInput);
             tr.appendChild(tdDesc);
-            
+
             // QTY
             let tdQty = document.createElement('td');
             let qtyInput = document.createElement('input');
@@ -583,7 +716,7 @@
             qtyInput.onchange = (function(r) { return function(e) { r.qty = toNumber(e.target.value); recalcAll(); }; })(row);
             tdQty.appendChild(qtyInput);
             tr.appendChild(tdQty);
-            
+
             // RATE
             let tdRate = document.createElement('td');
             let rateInput = document.createElement('input');
@@ -594,50 +727,69 @@
             rateInput.onchange = (function(r) { return function(e) { r.rate = toNumber(e.target.value); recalcAll(); }; })(row);
             tdRate.appendChild(rateInput);
             tr.appendChild(tdRate);
-            
+
             // TAXABLE VALUE
             let tdTaxable = document.createElement('td');
             tdTaxable.innerText = `₹${(row.taxableValue || 0).toFixed(2)}`;
             tr.appendChild(tdTaxable);
-            
-            // CGST %
-            let tdCgstPer = document.createElement('td');
-            let cgstInput = document.createElement('input');
-            cgstInput.type = 'number';
-            cgstInput.value = row.cgstPercent || 1.5;
-            cgstInput.step = '0.1';
-            cgstInput.style.width = '55px';
-            cgstInput.onchange = (function(r) { return function(e) { r.cgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdCgstPer.appendChild(cgstInput);
-            tr.appendChild(tdCgstPer);
-            
-            // CGST AMOUNT
-            let tdCgstAmt = document.createElement('td');
-            tdCgstAmt.innerText = `₹${(row.cgstAmount || 0).toFixed(2)}`;
-            tr.appendChild(tdCgstAmt);
-            
-            // SGST %
-            let tdSgstPer = document.createElement('td');
-            let sgstInput = document.createElement('input');
-            sgstInput.type = 'number';
-            sgstInput.value = row.sgstPercent || 1.5;
-            sgstInput.step = '0.1';
-            sgstInput.style.width = '55px';
-            sgstInput.onchange = (function(r) { return function(e) { r.sgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
-            tdSgstPer.appendChild(sgstInput);
-            tr.appendChild(tdSgstPer);
-            
-            // SGST AMOUNT
-            let tdSgstAmt = document.createElement('td');
-            tdSgstAmt.innerText = `₹${(row.sgstAmount || 0).toFixed(2)}`;
-            tr.appendChild(tdSgstAmt);
-            
+
+            // === DYNAMIC TAX COLUMNS ===
+            if (isIntraState) {
+                // CGST %
+                let tdCgstPer = document.createElement('td');
+                let cgstInput = document.createElement('input');
+                cgstInput.type = 'number';
+                cgstInput.value = row.cgstPercent || 1.5;
+                cgstInput.step = '0.1';
+                cgstInput.style.width = '55px';
+                cgstInput.onchange = (function(r) { return function(e) { r.cgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
+                tdCgstPer.appendChild(cgstInput);
+                tr.appendChild(tdCgstPer);
+
+                // CGST AMT
+                let tdCgstAmt = document.createElement('td');
+                tdCgstAmt.innerText = `₹${(row.cgstAmount || 0).toFixed(2)}`;
+                tr.appendChild(tdCgstAmt);
+
+                // SGST %
+                let tdSgstPer = document.createElement('td');
+                let sgstInput = document.createElement('input');
+                sgstInput.type = 'number';
+                sgstInput.value = row.sgstPercent || 1.5;
+                sgstInput.step = '0.1';
+                sgstInput.style.width = '55px';
+                sgstInput.onchange = (function(r) { return function(e) { r.sgstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
+                tdSgstPer.appendChild(sgstInput);
+                tr.appendChild(tdSgstPer);
+
+                // SGST AMT
+                let tdSgstAmt = document.createElement('td');
+                tdSgstAmt.innerText = `₹${(row.sgstAmount || 0).toFixed(2)}`;
+                tr.appendChild(tdSgstAmt);
+            } else {
+                // IGST %
+                let tdIgstPer = document.createElement('td');
+                let igstInput = document.createElement('input');
+                igstInput.type = 'number';
+                igstInput.value = row.igstPercent || 3;
+                igstInput.step = '0.1';
+                igstInput.style.width = '55px';
+                igstInput.onchange = (function(r) { return function(e) { r.igstPercent = toNumber(e.target.value); recalcAll(); }; })(row);
+                tdIgstPer.appendChild(igstInput);
+                tr.appendChild(tdIgstPer);
+
+                // IGST AMT
+                let tdIgstAmt = document.createElement('td');
+                tdIgstAmt.innerText = `₹${(row.igstAmount || 0).toFixed(2)}`;
+                tr.appendChild(tdIgstAmt);
+            }
+
             // TOTAL TAX
             let tdTotalTax = document.createElement('td');
             tdTotalTax.innerText = `₹${(row.totalTax || 0).toFixed(2)}`;
             tr.appendChild(tdTotalTax);
-            
-            // ADD / OTHER CHARGES
+
+            // ADD/OTHER CHARGES
             let tdAdd = document.createElement('td');
             let addInput = document.createElement('input');
             addInput.type = 'number';
@@ -647,13 +799,13 @@
             addInput.onchange = (function(r) { return function(e) { r.addCharges = toNumber(e.target.value); recalcAll(); }; })(row);
             tdAdd.appendChild(addInput);
             tr.appendChild(tdAdd);
-            
+
             // TOTAL BILL VALUE
             let tdTotalBill = document.createElement('td');
             tdTotalBill.innerText = `₹${(row.totalBillValue || 0).toFixed(2)}`;
             tdTotalBill.style.fontWeight = 'bold';
             tr.appendChild(tdTotalBill);
-            
+
             // ACTION
             let tdAction = document.createElement('td');
             let delBtn = document.createElement('button');
@@ -662,29 +814,43 @@
             delBtn.onclick = (function(i) { return function() { purchaseItems.splice(i,1); recalcAll(); }; })(idx);
             tdAction.appendChild(delBtn);
             tr.appendChild(tdAction);
-            
+
             tbody.appendChild(tr);
         }
     }
 
+    function renderTable() {
+        renderHeader();
+        renderTableBody();
+    }
+
     function addNewItem() {
         purchaseItems.push({
-            itemDesc: '', qty: 0, rate: 0, taxableValue: 0,
-            cgstPercent: 1.5, cgstAmount: 0,
-            sgstPercent: 1.5, sgstAmount: 0,
-            totalTax: 0, addCharges: 0, totalBillValue: 0
+            itemDesc: '',
+            qty: 0,
+            rate: 0,
+            taxableValue: 0,
+            cgstPercent: isIntraState ? 1.5 : 0,
+            sgstPercent: isIntraState ? 1.5 : 0,
+            igstPercent: isIntraState ? 0 : 3,
+            cgstAmount: 0,
+            sgstAmount: 0,
+            igstAmount: 0,
+            totalTax: 0,
+            addCharges: 0,
+            totalBillValue: 0
         });
         recalcAll();
     }
-    
+
     function savePurchaseToLocalStorage() {
         let partyName = document.getElementById('partyName').value.trim();
-        if(partyName === '') { alert('Please enter Party Name'); return false; }
-        if(purchaseItems.length === 0) { alert('Please add at least one item'); return false; }
-        
+        if (partyName === '') { alert('Please enter Party Name'); return false; }
+        if (purchaseItems.length === 0) { alert('Please add at least one item'); return false; }
+
         let grandTotalText = grandTotalSpan.innerText;
         let grandTotal = parseFloat(grandTotalText.replace('₹', '').replace(/,/g, '')) || 0;
-        
+
         const purchaseObj = {
             purchaseNo: purchaseNoSpan.innerText,
             purchaseDate: document.getElementById('purchaseDate').innerText,
@@ -692,68 +858,73 @@
             partyGstin: document.getElementById('partyGstin').value,
             billNumber: document.getElementById('billNumber').value,
             billType: document.getElementById('billType').value,
+            supplyType: document.getElementById('supplyType').value,
+            state: document.getElementById('supplyType').value === 'intra' ? 'Uttar Pradesh' : document.getElementById('stateSelect').value,
             discount: document.getElementById('discountAmount').value,
             items: purchaseItems.map(item => ({...item})),
             totalAmount: grandTotal,
             savedAt: new Date().toISOString()
         };
-        
+
         let existing = JSON.parse(localStorage.getItem('jp_purchases_list') || '[]');
         existing.unshift(purchaseObj);
         localStorage.setItem('jp_purchases_list', JSON.stringify(existing));
-        
-        // Update purchase number for next purchase
+
         updatePurchaseNumber();
-        
+
         let msg = document.createElement('div');
         msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#28a745;color:white;padding:10px 18px;border-radius:5px;z-index:1000;font-size:12px;';
         msg.innerHTML = '✓ Purchase saved successfully!';
         document.body.appendChild(msg);
         setTimeout(() => msg.remove(), 2000);
-        
-        // Optional: Reset form after save
-        if(confirm('Purchase saved! Do you want to start a new purchase?')) {
+
+        if (confirm('Purchase saved! Do you want to start a new purchase?')) {
             resetForm();
         }
         return true;
     }
-    
+
     function resetForm() {
-        if(confirm('Reset all fields? Current data will be lost.')) {
+        if (confirm('Reset all fields? Current data will be lost.')) {
             purchaseItems = [];
             document.getElementById('partyGstin').value = '';
             document.getElementById('partyName').value = '';
             document.getElementById('billNumber').value = '';
             document.getElementById('discountAmount').value = '0';
             document.getElementById('billType').value = 'GST Purchase';
+            document.getElementById('supplyType').value = 'intra';
+            handleSupplyTypeChange();   // Reset to Intra-State
             setPurchaseMeta();
             recalcAll();
         }
     }
-    
+
     function validateAndPrint() {
         let partyName = document.getElementById('partyName').value.trim();
-        if(partyName === '') { 
+        if (partyName === '') { 
             alert('Please enter Party Name before printing'); 
             return false; 
         }
-        if(purchaseItems.length === 0) { 
+        if (purchaseItems.length === 0) { 
             alert('Please add at least one item before printing'); 
             return false; 
         }
         window.print();
         return true;
     }
-    
+
+    // Event Listeners
     addBtn.onclick = addNewItem;
     saveBtn.onclick = savePurchaseToLocalStorage;
     resetBtn.onclick = resetForm;
     printBtn.onclick = validateAndPrint;
     discountInput.onchange = recalcAll;
-    
+
+    // Initialize everything
     setPurchaseMeta();
     purchaseItems = [];
-    addNewItem(); // Start with one empty row
+    addNewItem();           // Start with one row (Intra by default)
+    initSupplyType();       // Setup Intra/Inter + dynamic columns
 </script>
 </body>
 </html>
