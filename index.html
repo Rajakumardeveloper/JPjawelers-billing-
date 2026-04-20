@@ -63,6 +63,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            transition: all 0.2s;
         }
         .btn-green { background: #28a745; color: white; }
         .btn-orange { background: #fd7e14; color: white; }
@@ -71,7 +72,9 @@
         .btn-cyan { background: #17a2b8; color: white; }
         .btn-gray { background: #6c757d; color: white; }
         .btn-red { background: #dc3545; color: white; }
-        .btn:hover { opacity: 0.85; }
+        .btn-purple { background: #6f42c1; color: white; }
+        .btn-teal { background: #20c997; color: white; }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
 
         .tabs {
             display: flex;
@@ -108,6 +111,7 @@
         .stat-card {
             border: 1px solid #000;
             padding: 15px;
+            background: white;
         }
         .stat-card h4 {
             font-size: 12px;
@@ -117,6 +121,7 @@
         .stat-card .value {
             font-size: 28px;
             font-weight: bold;
+            color: #1e466e;
         }
 
         .filters {
@@ -128,6 +133,7 @@
             gap: 10px;
             justify-content: space-between;
             align-items: center;
+            background: #fafafa;
         }
         .search-box {
             border: 1px solid #aaa;
@@ -136,6 +142,7 @@
             align-items: center;
             gap: 8px;
             flex: 1;
+            background: white;
         }
         .search-box input {
             border: none;
@@ -145,12 +152,16 @@
         .filter-select {
             padding: 6px 10px;
             border: 1px solid #aaa;
+            background: white;
         }
         .sort-btn {
             padding: 6px 12px;
             border: 1px solid #aaa;
             background: white;
             cursor: pointer;
+        }
+        .sort-btn:hover {
+            background: #e9ecef;
         }
         .sort-btn.active {
             background: #1e466e;
@@ -160,6 +171,7 @@
         .table-wrapper {
             border: 1px solid #000;
             overflow-x: auto;
+            background: white;
         }
         table {
             width: 100%;
@@ -188,6 +200,7 @@
         }
         .action-btn.view { color: #1e466e; }
         .action-btn.delete { color: #dc3545; }
+        .action-btn:hover { background: #f0f0f0; }
         .empty-row {
             text-align: center;
             padding: 40px;
@@ -230,6 +243,13 @@
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
         .modal-footer {
             display: flex;
             justify-content: flex-end;
@@ -246,6 +266,7 @@
         .detail-label {
             width: 110px;
             font-weight: bold;
+            color: #555;
         }
 
         .toast {
@@ -258,10 +279,16 @@
             border-radius: 5px;
             z-index: 1001;
             animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media print {
+            .header .buttons, .filters, .action-btn, .tab { display: none !important; }
+            .stat-card { border: 1px solid #000; }
         }
     </style>
 </head>
@@ -272,12 +299,14 @@
         <div class="header">
             <div class="logo">
                 <h2><i class="fas fa-gem"></i> J.P JEWELLERS</h2>
-                <p>Management Dashboard | GSTIN: 29AAAFJ1234P1ZR</p>
+                <p>Management Dashboard | GSTIN: 29AAAFJ1234P1ZR | Lalganj, Bairia, Ballia - 277216</p>
             </div>
             <div class="buttons">
-                <!-- Create Buttons - NOW AT TOP -->
-                <button class="btn btn-green" id="newInvoiceBtn"><i class="fas fa-plus-circle"></i> New Sales Invoice</button>
-                <button class="btn btn-orange" id="newPurchaseBtn"><i class="fas fa-plus-circle"></i> New Purchase Bill</button>
+                <!-- Create Buttons -->
+                <button class="btn btn-green" id="newInvoiceBtn"><i class="fas fa-plus-circle"></i> New Sales</button>
+                <button class="btn btn-orange" id="newPurchaseBtn"><i class="fas fa-plus-circle"></i> New Purchase</button>
+                <!-- Stock Review Button - OPENS stocks.html -->
+                <button class="btn btn-teal" id="stockReviewBtn"><i class="fas fa-boxes"></i> Stock Review</button>
                 <!-- Action Buttons -->
                 <button class="btn btn-yellow" id="backupBtn"><i class="fas fa-download"></i> Backup</button>
                 <button class="btn btn-cyan" id="restoreBtn"><i class="fas fa-upload"></i> Restore</button>
@@ -438,7 +467,7 @@
     function updateStats() {
         let totalSales = salesData.length;
         let totalRevenue = salesData.reduce((s, i) => s + (i.amount || 0), 0);
-        let uniqueCust = new Set(salesData.map(i => i.customerName)).size;
+        let uniqueCust = new Set(salesData.map(i => i.customerName).filter(Boolean)).size;
         let avgSales = totalSales > 0 ? totalRevenue / totalSales : 0;
         document.getElementById('totalSales').innerText = totalSales;
         document.getElementById('totalRevenue').innerHTML = `₹${totalRevenue.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
@@ -447,7 +476,7 @@
         
         let totalPurchase = purchaseData.length;
         let totalPurchaseVal = purchaseData.reduce((s, i) => s + (i.amount || 0), 0);
-        let uniqueSupp = new Set(purchaseData.map(i => i.partyName)).size;
+        let uniqueSupp = new Set(purchaseData.map(i => i.partyName).filter(Boolean)).size;
         let avgPurchase = totalPurchase > 0 ? totalPurchaseVal / totalPurchase : 0;
         document.getElementById('totalPurchase').innerText = totalPurchase;
         document.getElementById('totalPurchaseValue').innerHTML = `₹${totalPurchaseVal.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
@@ -473,9 +502,9 @@
         }
         
         if (salesFilter.sort === 'newest') {
-            filtered.sort((a,b) => new Date(b.date?.split('/').reverse().join('-')) - new Date(a.date?.split('/').reverse().join('-')));
+            filtered.sort((a,b) => new Date(b.date?.split('/').reverse().join('-') || 0) - new Date(a.date?.split('/').reverse().join('-') || 0));
         } else if (salesFilter.sort === 'oldest') {
-            filtered.sort((a,b) => new Date(a.date?.split('/').reverse().join('-')) - new Date(b.date?.split('/').reverse().join('-')));
+            filtered.sort((a,b) => new Date(a.date?.split('/').reverse().join('-') || 0) - new Date(b.date?.split('/').reverse().join('-') || 0));
         } else if (salesFilter.sort === 'highest') {
             filtered.sort((a,b) => (b.amount || 0) - (a.amount || 0));
         }
@@ -488,14 +517,14 @@
         
         let html = '';
         filtered.forEach(inv => {
-            let items = inv.items?.map(i => i.itemDesc).join(', ') || '-';
+            let items = inv.items?.map(i => i.itemDesc || i.description || 'Item').join(', ') || '-';
             html += `<tr>
                 <td>${inv.invoiceNo || '-'}</td>
                 <td><strong>${escapeHtml(inv.customerName || '-')}</strong></td>
                 <td>${inv.date || '-'}</td>
                 <td>₹${(inv.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
                 <td><span style="padding:2px 6px; border:1px solid #aaa; border-radius:3px;">${inv.paymentMode || 'Cash'}</span></td>
-                <td>${escapeHtml(items.substring(0, 40))}</td>
+                <td>${escapeHtml(items.substring(0, 40))}${items.length > 40 ? '...' : ''}</td>
                 <td>
                     <button class="action-btn view" onclick="viewSales('${inv.invoiceNo}')"><i class="fas fa-eye"></i> View</button>
                     <button class="action-btn delete" onclick="confirmDelete('${inv.invoiceNo}', 'sales')"><i class="fas fa-trash"></i> Del</button>
@@ -523,9 +552,9 @@
         }
         
         if (purchaseFilter.sort === 'newest') {
-            filtered.sort((a,b) => new Date(b.purchaseDate?.split('/').reverse().join('-')) - new Date(a.purchaseDate?.split('/').reverse().join('-')));
+            filtered.sort((a,b) => new Date(b.purchaseDate?.split('/').reverse().join('-') || 0) - new Date(a.purchaseDate?.split('/').reverse().join('-') || 0));
         } else if (purchaseFilter.sort === 'oldest') {
-            filtered.sort((a,b) => new Date(a.purchaseDate?.split('/').reverse().join('-')) - new Date(b.purchaseDate?.split('/').reverse().join('-')));
+            filtered.sort((a,b) => new Date(a.purchaseDate?.split('/').reverse().join('-') || 0) - new Date(b.purchaseDate?.split('/').reverse().join('-') || 0));
         } else if (purchaseFilter.sort === 'highest') {
             filtered.sort((a,b) => (b.amount || 0) - (a.amount || 0));
         }
@@ -538,14 +567,14 @@
         
         let html = '';
         filtered.forEach(p => {
-            let items = p.items?.map(i => i.itemDesc).join(', ') || '-';
+            let items = p.items?.map(i => i.itemDesc || i.description || 'Item').join(', ') || '-';
             html += `<tr>
                 <td>${p.purchaseNo || '-'}</td>
                 <td><strong>${escapeHtml(p.partyName || '-')}</strong></td>
                 <td>${p.purchaseDate || '-'}</td>
                 <td>₹${(p.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
                 <td><span style="padding:2px 6px; border:1px solid #aaa; border-radius:3px;">${p.billType || 'GST Purchase'}</span></td>
-                <td>${escapeHtml(items.substring(0, 40))}</td>
+                <td>${escapeHtml(items.substring(0, 40))}${items.length > 40 ? '...' : ''}</td>
                 <td>
                     <button class="action-btn view" onclick="viewPurchase('${p.purchaseNo}')"><i class="fas fa-eye"></i> View</button>
                     <button class="action-btn delete" onclick="confirmDelete('${p.purchaseNo}', 'purchase')"><i class="fas fa-trash"></i> Del</button>
@@ -558,13 +587,13 @@
     function viewSales(id) {
         let item = salesData.find(i => i.invoiceNo === id);
         if (!item) return;
-        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc)}</strong> - ₹${(it.total || it.rowTotal || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('');
+        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc || it.description || 'Item')}</strong> - ₹${(it.total || it.rowTotal || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('') || '-';
         document.getElementById('viewContent').innerHTML = `
             <div class="detail-row"><div class="detail-label">Invoice No:</div><div>${item.invoiceNo}</div></div>
-            <div class="detail-row"><div class="detail-label">Customer:</div><div>${escapeHtml(item.customerName)}</div></div>
-            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.date}</div></div>
-            <div class="detail-row"><div class="detail-label">Payment:</div><div>${item.paymentMode}</div></div>
-            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Customer:</div><div>${escapeHtml(item.customerName || '-')}</div></div>
+            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.date || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Payment:</div><div>${item.paymentMode || 'Cash'}</div></div>
+            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml}</div></div>
             <div class="detail-row"><div class="detail-label">Total:</div><div><strong>₹${(item.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</strong></div></div>
         `;
         openModal('viewModal');
@@ -573,13 +602,13 @@
     function viewPurchase(id) {
         let item = purchaseData.find(i => i.purchaseNo === id);
         if (!item) return;
-        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc)}</strong> - Qty:${it.qty} × ₹${it.rate} = ₹${(it.qty*it.rate).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('');
+        let itemsHtml = item.items?.map((it, idx) => `<div><strong>${idx+1}. ${escapeHtml(it.itemDesc || it.description || 'Item')}</strong> - Qty:${it.qty || 0} × ₹${it.rate || 0} = ₹${((it.qty||0)*(it.rate||0)).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>`).join('') || '-';
         document.getElementById('viewContent').innerHTML = `
             <div class="detail-row"><div class="detail-label">Bill No:</div><div>${item.purchaseNo}</div></div>
-            <div class="detail-row"><div class="detail-label">Supplier:</div><div>${escapeHtml(item.partyName)}</div></div>
-            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.purchaseDate}</div></div>
-            <div class="detail-row"><div class="detail-label">Bill Type:</div><div>${item.billType}</div></div>
-            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Supplier:</div><div>${escapeHtml(item.partyName || '-')}</div></div>
+            <div class="detail-row"><div class="detail-label">Date:</div><div>${item.purchaseDate || '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">Bill Type:</div><div>${item.billType || 'GST Purchase'}</div></div>
+            <div class="detail-row"><div class="detail-label">Items:</div><div>${itemsHtml}</div></div>
             <div class="detail-row"><div class="detail-label">Total:</div><div><strong>₹${(item.amount || 0).toLocaleString('en-IN', {minimumFractionDigits:2})}</strong></div></div>
         `;
         openModal('viewModal');
@@ -669,7 +698,7 @@
 
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
     function openModal(id) {
@@ -693,6 +722,11 @@
     
     document.getElementById('newPurchaseBtn').onclick = function() {
         window.location.href = 'purchasebill.html';
+    };
+    
+    // STOCK REVIEW BUTTON - OPENS stocks.html
+    document.getElementById('stockReviewBtn').onclick = function() {
+        window.location.href = 'stocks.html';
     };
     
     document.getElementById('backupBtn').onclick = backupData;
