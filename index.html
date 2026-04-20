@@ -51,6 +51,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
         }
         .btn {
             padding: 8px 16px;
@@ -267,12 +268,17 @@
 <body>
 <div class="dashboard-container">
     <div class="dashboard">
+        <!-- Header with ALL buttons at top -->
         <div class="header">
             <div class="logo">
                 <h2><i class="fas fa-gem"></i> J.P JEWELLERS</h2>
                 <p>Management Dashboard | GSTIN: 29AAAFJ1234P1ZR</p>
             </div>
             <div class="buttons">
+                <!-- Create Buttons - NOW AT TOP -->
+                <button class="btn btn-green" id="newInvoiceBtn"><i class="fas fa-plus-circle"></i> New Sales Invoice</button>
+                <button class="btn btn-orange" id="newPurchaseBtn"><i class="fas fa-plus-circle"></i> New Purchase Bill</button>
+                <!-- Action Buttons -->
                 <button class="btn btn-yellow" id="backupBtn"><i class="fas fa-download"></i> Backup</button>
                 <button class="btn btn-cyan" id="restoreBtn"><i class="fas fa-upload"></i> Restore</button>
                 <button class="btn btn-blue" id="printBtn"><i class="fas fa-print"></i> Print</button>
@@ -280,11 +286,13 @@
             </div>
         </div>
 
+        <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" data-tab="sales">📄 Sales Invoices</div>
             <div class="tab" data-tab="purchase">🛒 Purchase Bills</div>
         </div>
 
+        <!-- Sales Tab -->
         <div id="salesTab" class="tab-content active">
             <div class="stats">
                 <div class="stat-card"><h4>Total Invoices</h4><div class="value" id="totalSales">0</div></div>
@@ -321,11 +329,9 @@
                     </tbody>
                 </table>
             </div>
-            <div style="margin-top: 15px; text-align: right;">
-                <button class="btn btn-green" id="newInvoiceBtn"><i class="fas fa-plus"></i> New Sales Invoice</button>
-            </div>
         </div>
 
+        <!-- Purchase Tab -->
         <div id="purchaseTab" class="tab-content">
             <div class="stats">
                 <div class="stat-card"><h4>Total Purchases</h4><div class="value" id="totalPurchase">0</div></div>
@@ -361,9 +367,6 @@
                         <tr><td colspan="7" class="empty-row">No purchase bills found. Create your first purchase!</td></tr>
                     </tbody>
                 </table>
-            </div>
-            <div style="margin-top: 15px; text-align: right;">
-                <button class="btn btn-orange" id="newPurchaseBtn"><i class="fas fa-plus"></i> New Purchase Bill</button>
             </div>
         </div>
     </div>
@@ -683,7 +686,7 @@
         document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
     }
 
-    // ========== FIXED: Navigation to purchasebill.html ==========
+    // ========== ALL BUTTONS AT TOP - EVENT LISTENERS ==========
     document.getElementById('newInvoiceBtn').onclick = function() {
         window.location.href = 'invoice.html';
     };
